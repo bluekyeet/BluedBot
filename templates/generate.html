@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Linkvertise Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            text-align: center;
+            padding-top: 100px;
+        }
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: green;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello, User {{ user_id }}!</h1>
+
+        {% if success %}
+            <p class="success">✅ Success! Your reward has been credited.</p>
+        {% endif %}
+
+        <p>Your generated Linkvertise link is:</p>
+        <p><a href="{{ link }}" target="_blank">Generate Link</a></p>
+    </div>
+</body>
+</html>
