@@ -43,10 +43,18 @@ class BluedHostBot(commands.Bot):
         super().__init__(
             command_prefix='bh#',
             intents=discord.Intents.all(),
-            application_id=1367431253141225572
+            application_id=int(os.getenv("DISCORD_BOT_APPLICATION_ID")),
+            help_command=None
         )
         self.session = None
-        self.initial_extensions = ["cogs.AddCoins"]
+
+        self.initial_extensions = ["cogs.Coins"]
+
+        if str(os.getenv("LINKVERTISE_SYSTEM")).lower() == "enable":
+            self.initial_extensions.append("cogs.Linkvertise")
+        if str(os.getenv("SERVER_EXPIRY_SYSTEM")).lower() == "enable":
+            self.initial_extensions.append("cogs.RenewServer")
+
 
     async def setup_hook(self):
         self.session = aiohttp.ClientSession()
@@ -69,7 +77,7 @@ class BluedHostBot(commands.Bot):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
 
 
-if str(os.getenv('LINKVERTISE_SYSTEM')).lower() == 'enable':
+if str(os.getenv("LINKVERTISE_SYSTEM")).lower() == 'enable':
     webserver_thread = threading.Thread(target=webserver)
     webserver_thread.daemon = True
     webserver_thread.start()
