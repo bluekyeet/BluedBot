@@ -1,43 +1,18 @@
 import discord
 import os
 import aiohttp
-import sqlite3
 import threading
 from ServerExpiryChecker import checker
 from LinkvertiseWebserver import webserver
 from discord.ext import commands
 from dotenv import load_dotenv
+from database.DatabaseEngine import engine
+from database.DatabaseModels import metadata
 
 load_dotenv()
 
-
 def initdb():
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        discord_id INTEGER PRIMARY KEY,
-        user_uid INTEGER NOT NULL,
-        coins INTEGER DEFAULT 0,
-        claimed_boost_reward INTEGER DEFAULT 0,
-        lvcount INTEGER DEFAULT 0,
-        lvcount_date TEXT DEFAULT NULL,
-        avaliable_server_slots INTEGER DEFAULT 1,
-        used_server_slots INTEGER DEFAULT 0
-    )
-    """)
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS servers (
-        server_id INTEGER PRIMARY KEY,
-        user_uid INTEGER,
-        server_level INTEGER DEFAULT 0,
-        server_last_renew_date INTEGER
-    )
-    """)
-    conn.commit()
-    conn.close()
-
+    metadata.create_all(engine)
 
 class BluedHostBot(commands.Bot):
     def __init__(self) -> None:
@@ -71,9 +46,6 @@ class BluedHostBot(commands.Bot):
 
     async def on_ready(self):
         initdb()
-        guild = bot.guilds[0]
-        invites = await guild.invites()
-        invite_cache[guild.id] = {invite.code: invite.uses for invite in invites}
         print(f'Logged in as {self.user} (ID: {self.user.id})')
 
 

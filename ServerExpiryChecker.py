@@ -1,6 +1,6 @@
 import datetime
 import time
-import DatabaseHandler
+from database import DatabaseHandler
 import requests
 import os
 from dotenv import load_dotenv

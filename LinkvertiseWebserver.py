@@ -3,7 +3,7 @@ import os
 import random
 import string
 import base64
-import DatabaseHandler
+from database import DatabaseHandler
 from dotenv import load_dotenv
 from flask import Flask, request, render_template, redirect, url_for
 

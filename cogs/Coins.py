@@ -1,6 +1,6 @@
 import os
 import discord
-import DatabaseHandler
+from database import DatabaseHandler
 import EmbedHandler
 from discord import app_commands
 from discord.ext import commands

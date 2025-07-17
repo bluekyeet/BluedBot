@@ -24,4 +24,9 @@ def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int):
         "default": port
       }
     }
-    return config
+    limits = {
+      "memory_max": 8192,
+      "disk_max": 8192,
+      "cpu_max": 400,
+    }
+    return config, limits
