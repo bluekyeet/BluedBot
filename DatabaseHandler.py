@@ -138,17 +138,6 @@ def check_if_user_has_slots(discord_id):
         return False
     return True
 
-def delete_user(discord_id):
-    try:
-        with get_connection() as conn:
-            c = conn.cursor()
-            c.execute("DELETE FROM users WHERE discord_id = ?", (discord_id,))
-            conn.commit()
-    except sqlite3.OperationalError:
-        return 400
-    return 200
-#TODO when adding this function, ensure that the user has no servers before actually going through with this action.
-
 def get_all_server_expiry_times():
     try:
         with get_connection() as conn:

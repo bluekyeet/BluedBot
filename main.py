@@ -20,23 +20,24 @@ def initdb():
         discord_id INTEGER PRIMARY KEY,
         user_uid INTEGER NOT NULL,
         coins INTEGER DEFAULT 0,
-        boost_reward INTEGER DEFAULT 0,
+        claimed_boost_reward INTEGER DEFAULT 0,
+        lvcount INTEGER DEFAULT 0,
+        lvcount_date TEXT DEFAULT NULL,
         avaliable_server_slots INTEGER DEFAULT 1,
         used_server_slots INTEGER DEFAULT 0
     )
     """)
     c.execute("""
-        CREATE TABLE IF NOT EXISTS servers (
-            server_id INTEGER PRIMARY KEY,
-            user_uid INTEGER,
-            server_level INTEGER DEFAULT 0,
-            server_last_renew_date INTEGER
-        )
-        """)
+    CREATE TABLE IF NOT EXISTS servers (
+        server_id INTEGER PRIMARY KEY,
+        user_uid INTEGER,
+        server_level INTEGER DEFAULT 0,
+        server_last_renew_date INTEGER
+    )
+    """)
     conn.commit()
     conn.close()
 
-invite_cache = {}
 
 class BluedHostBot(commands.Bot):
     def __init__(self) -> None:
@@ -47,7 +48,6 @@ class BluedHostBot(commands.Bot):
             help_command=None
         )
         self.session = None
-
         self.initial_extensions = ["cogs.Coins"]
 
         if str(os.getenv("LINKVERTISE_SYSTEM")).lower() == "enable":

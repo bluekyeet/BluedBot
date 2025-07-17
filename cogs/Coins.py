@@ -27,7 +27,8 @@ class Coins(commands.Cog):
 
                     await interaction.response.send_message(
                         embed=EmbedHandler.warning(
-                            message="The user you are trying to add coins to doesn't have an account."),
+                            message="The user you are trying to add coins to doesn't have an account."
+                        ),
                         ephemeral=True
                     )
                     return
@@ -49,11 +50,11 @@ class Coins(commands.Cog):
                 )
 
     @app_commands.command(name="buy", description="Purchase resources for your server.")
-    @app_commands.checks.cooldown(1, 10.0, key=lambda i: i.user.id)
-    @app_commands.choices(item=[app_commands.Choice(name="Server slot | 500 dabloons", value=1)])
+    @app_commands.checks.cooldown(10, 5.0, key=lambda i: i.user.id)
+    @app_commands.choices(item=[app_commands.Choice(name="Server slot | 500 coins", value=1)])
     @app_commands.describe(item="The item you want to buy.")
     async def buy(self, interaction: discord.Interaction, item: app_commands.Choice[int]):
-        if interaction.channel.id != 1367424595824607302:
+        if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="Wrong channel!"
@@ -62,6 +63,14 @@ class Coins(commands.Cog):
             )
         else:
             try:
+                if os.getenv("SHOP_SYSTEM").lower() != "enable":
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="Shop are currently disabled."
+                        ),
+                        ephemeral=True
+                    )
+                    return
                 if not DatabaseHandler.check_user_exists(interaction.user.id) or DatabaseHandler == 400:
                     await interaction.response.send_message(
                         embed=EmbedHandler.warning(
@@ -71,20 +80,20 @@ class Coins(commands.Cog):
                     )
                     return
                 user_information = DatabaseHandler.get_user_info(interaction.user.id)
-                dabloons = user_information[2]
+                coins = user_information[2]
                 if item.value == 1:
-                    if dabloons >= 500:
+                    if coins >= 500:
                         DatabaseHandler.update_coin_count(interaction.user.id, -500)
                         DatabaseHandler.update_server_slots(interaction.user.id, 1)
                         await interaction.response.send_message(
                             embed=EmbedHandler.success(
-                                message="You have bought a server slot for 500 dabloons.\nYou now have {dabloons - 500} dabloons left."
+                                message=f"You have bought a server slot for 500 coins.\nYou now have {coins - 500} coins left."
                             )
                         )
                     else:
                         await interaction.response.send_message(
                             embed=EmbedHandler.warning(
-                                message="You don't have enough dabloons to purchase this item."
+                                message="You don't have enough coins to purchase this item."
                             ),
                             ephemeral=True
                         )
@@ -106,8 +115,71 @@ class Coins(commands.Cog):
                     ephemeral=True
                 )
 
+    @app_commands.command(name="boostrewards", description="Claim your boost rewards.")
+    @app_commands.checks.cooldown(1, 5.0, key=lambda i: i.user.id)
+    async def boostrewards(self, interaction: discord.Interaction):
+        if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="Wrong channel!"
+                ),
+                ephemeral=True
+            )
+        else:
+            try:
+                if os.getenv("DISCORD_BOOST_REWARD_SYSTEM").lower() != "enable":
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="Boost rewards are currently disabled."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                if not DatabaseHandler.check_user_exists(interaction.user.id) or DatabaseHandler == 400:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="You don't have an account."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                if interaction.user.premium_since is None:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="You need to boost the server to claim the reward."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                if DatabaseHandler.boost_rewards_claimed(interaction.user.id) == 1:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="You have already claimed your boost reward."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                DatabaseHandler.update_coin_count(interaction.user.id, int(os.getenv("DISCORD_BOOST_REWARD_COINS")))
+                DatabaseHandler.update_boost_rewards_claimed(interaction.user.id, 1)
+                await interaction.response.send_message(
+                    embed=EmbedHandler.success(
+                        message="You have successfully claimed your boost reward of 1500 coins."
+                    ),
+                    ephemeral=True
+                )
+
+            except Exception as e:
+                print(e)
+                await interaction.response.send_message(
+                    embed=EmbedHandler.error(
+                        message="Something went wrong. Please contact support."
+                    ),
+                    ephemeral=True
+                )
+
     @buy.error
-    async def buy_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+    @boostrewards.error
+    async def error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(
                 f"This command is on cooldown. Please try again in {error.retry_after:.2f} seconds.",
