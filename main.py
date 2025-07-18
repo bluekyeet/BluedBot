@@ -27,12 +27,10 @@ class BluedHostBot(commands.Bot):
             help_command=None
         )
         self.session = None
-        self.initial_extensions = ["cogs.Coins"]
+        self.initial_extensions = ["cogs.Coins", "cogs.Account", "cogs.Help", "cogs.Moderation"]
 
         if str(os.getenv("LINKVERTISE_SYSTEM")).lower() == "enable":
             self.initial_extensions.append("cogs.Linkvertise")
-        if str(os.getenv("SERVER_EXPIRY_SYSTEM")).lower() == "enable":
-            self.initial_extensions.append("cogs.RenewServer")
 
 
     async def setup_hook(self):

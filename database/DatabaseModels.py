@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData
+from sqlalchemy import Table, Column, Integer, String, MetaData
 
 metadata = MetaData()
 
@@ -11,9 +11,15 @@ users = Table(
     Column("claimed_boost_reward", Integer, default=0),
     Column("lvcount", Integer, default=0),
     Column("lvcount_date", String, nullable=True),
-    Column("avaliable_server_slots", Integer, default=1),
+    Column("available_server_slots", Integer, default=0),
     Column("used_server_slots", Integer, default=0),
     Column("blacklist_status", Integer, default=0),
+    Column("available_cpu", Integer, default=0),
+    Column("available_ram", Integer, default=0),
+    Column("available_disk", Integer, default=0),
+    Column("used_cpu", Integer, default=0),
+    Column("used_ram", Integer, default=0),
+    Column("used_disk", Integer, default=0),
 )
 
 servers = Table(

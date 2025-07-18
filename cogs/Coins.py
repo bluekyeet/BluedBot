@@ -1,5 +1,7 @@
 import os
 import discord
+
+import Logger
 from database import DatabaseHandler
 import EmbedHandler
 from discord import app_commands
@@ -47,6 +49,9 @@ class Coins(commands.Cog):
                         message=f"Added {amount} coins to <@{user.id}> successfully. They have {DatabaseHandler.check_coin_count(user.id)} coins now."
                     )
                 )
+
+                Logger.send_webhook(f"{interaction.user.name} added {amount} coins to <@{user.id}>.")
+
             except Exception as e:
                 print(e)
                 await interaction.response.send_message(
@@ -58,7 +63,10 @@ class Coins(commands.Cog):
 
     @app_commands.command(name="buy", description="Purchase resources for your server.")
     @app_commands.checks.cooldown(10, 5.0, key=lambda i: i.user.id)
-    @app_commands.choices(item=[app_commands.Choice(name="Server slot | 500 coins", value=1)])
+    @app_commands.choices(item=[app_commands.Choice(name=f"Server slot | {os.getenv('SERVER_SLOT_PRICE')} coins", value=1),
+                                app_commands.Choice(name=f"CPU (per 100%) | {os.getenv('CPU_PRICE')} coins", value=2),
+                                app_commands.Choice(name=f"RAM (per GB) | {os.getenv('RAM_PRICE')} coins", value=3),
+                                app_commands.Choice(name=f"DISK (per GB) | {os.getenv('DISK_PRICE')} coins", value=4)])
     @app_commands.describe(item="The item you want to buy.")
     async def buy(self, interaction: discord.Interaction, item: app_commands.Choice[int]):
         if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
@@ -66,6 +74,14 @@ class Coins(commands.Cog):
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."
                 ), ephemeral=True
+            )
+            return
+        if os.getenv("SHOP_SYSTEM").lower() != "enable":
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="Shop are currently disabled."
+                ),
+                ephemeral=True
             )
             return
         if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
@@ -77,14 +93,6 @@ class Coins(commands.Cog):
             )
         else:
             try:
-                if os.getenv("SHOP_SYSTEM").lower() != "enable":
-                    await interaction.response.send_message(
-                        embed=EmbedHandler.warning(
-                            message="Shop are currently disabled."
-                        ),
-                        ephemeral=True
-                    )
-                    return
                 if not DatabaseHandler.check_user_exists(interaction.user.id) or DatabaseHandler == 400:
                     await interaction.response.send_message(
                         embed=EmbedHandler.warning(
@@ -95,13 +103,104 @@ class Coins(commands.Cog):
                     return
                 user_information = DatabaseHandler.get_user_info(interaction.user.id)
                 coins = user_information[2]
+                server_slot_price = int(os.getenv("SERVER_SLOT_PRICE"))
+                server_slots = int(user_information[6])
+                cpu = int(user_information[9])
+                ram = int(user_information[10])
+                disk = int(user_information[11])
+                cpu_price = int(os.getenv("CPU_PRICE"))
+                ram_price = int(os.getenv("RAM_PRICE"))
+                disk_price = int(os.getenv("Disk_PRICE"))
                 if item.value == 1:
-                    if coins >= 500:
-                        DatabaseHandler.update_coin_count(interaction.user.id, -500)
+                    if server_slots >= int(os.getenv("SERVER_SLOT_LIMIT")):
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.warning(
+                                message="You have reached the maximum amount purchasable of server slots."
+                            )
+                        )
+                        return
+                    if coins >= server_slot_price:
+                        DatabaseHandler.update_coin_count(interaction.user.id, -server_slot_price)
                         DatabaseHandler.update_server_slots(interaction.user.id, 1)
                         await interaction.response.send_message(
                             embed=EmbedHandler.success(
-                                message=f"You have bought a server slot for 500 coins.\nYou now have {coins - 500} coins left."
+                                message=f"You have bought a server slot for {server_slot_price} coins.\n"
+                                        f"You now have {coins - server_slot_price} coins left."
+                            )
+                        )
+                    else:
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.warning(
+                                message="You don't have enough coins to purchase this item."
+                            ),
+                            ephemeral=True
+                        )
+                        return
+                elif item.value == 2:
+                    if cpu >= int(os.getenv("CPU_LIMIT")):
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.warning(
+                                message="You have reached the maximum amount purchasable of CPU."
+                            )
+                        )
+                        return
+                    if coins >= cpu_price:
+                        DatabaseHandler.update_coin_count(interaction.user.id, -cpu_price)
+                        DatabaseHandler.update_cpu(interaction.user.id, 1)
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.success(
+                                message=f"You have bought 100% CPU for {cpu_price} coins.\n"
+                                        f"You now have {coins - cpu_price} coins left."
+                            )
+                        )
+                    else:
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.warning(
+                                message="You don't have enough coins to purchase this item."
+                            ),
+                            ephemeral=True
+                        )
+                        return
+                elif item.value == 3:
+                    if ram >= int(os.getenv("RAM_LIMIT")):
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.warning(
+                                message="You have reached the maximum amount purchasable of RAM."
+                            )
+                        )
+                        return
+                    if coins >= ram_price:
+                        DatabaseHandler.update_coin_count(interaction.user.id, -ram_price)
+                        DatabaseHandler.update_cpu(interaction.user.id, 1)
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.success(
+                                message=f"You have bought 1 GB of RAM for {ram_price} coins.\n"
+                                        f"You now have {coins - ram_price} coins left."
+                            )
+                        )
+                    else:
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.warning(
+                                message="You don't have enough coins to purchase this item."
+                            ),
+                            ephemeral=True
+                        )
+                        return
+                elif item.value == 4:
+                    if disk >= int(os.getenv("DISK_LIMIT")):
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.warning(
+                                message="You have reached the maximum amount purchasable of DISK."
+                            )
+                        )
+                        return
+                    if coins >= disk_price:
+                        DatabaseHandler.update_coin_count(interaction.user.id, -disk_price)
+                        DatabaseHandler.update_cpu(interaction.user.id, 1)
+                        await interaction.response.send_message(
+                            embed=EmbedHandler.success(
+                                message=f"You have bought 1 GB of DISK for {disk_price} coins.\n"
+                                        f"You now have {coins - disk_price} coins left."
                             )
                         )
                     else:
@@ -184,7 +283,7 @@ class Coins(commands.Cog):
                 DatabaseHandler.update_boost_rewards_claimed(interaction.user.id, 1)
                 await interaction.response.send_message(
                     embed=EmbedHandler.success(
-                        message="You have successfully claimed your boost reward of 1500 coins."
+                        message=f'You have successfully claimed your boost reward of {os.getenv("discord_boost_reward_coins")} coins.'
                     ),
                     ephemeral=True
                 )

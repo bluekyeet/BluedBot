@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
-from DatabaseConfig import DB_BACKEND, MYSQL_CONFIG, SQLITE_PATH
+from database.DatabaseConfig import DB_BACKEND, MYSQL_CONFIG, SQLITE_PATH
 
 if DB_BACKEND == "mysql":
     engine = create_engine(
@@ -110,7 +110,7 @@ def update_linkvertise_date(discord_id, param):
 def check_if_user_has_slots(discord_id):
     try:
         with get_connection() as conn:
-            result = conn.execute(text("SELECT avaliable_server_slots, used_server_slots FROM users WHERE discord_id = :discord_id"), {"discord_id": discord_id}).fetchone()
+            result = conn.execute(text("SELECT available_server_slots, used_server_slots FROM users WHERE discord_id = :discord_id"), {"discord_id": discord_id}).fetchone()
     except SQLAlchemyError:
         return 400
     return result and result[0] > result[1]
@@ -221,7 +221,7 @@ def check_if_user_has_any_servers(discord_id):
 def update_server_slots(discord_id, param):
     try:
         with get_connection() as conn:
-            conn.execute(text("UPDATE users SET avaliable_server_slots = avaliable_server_slots + :param WHERE discord_id = :discord_id"), {
+            conn.execute(text("UPDATE users SET available_server_slots = available_server_slots + :param WHERE discord_id = :discord_id"), {
                 "param": param,
                 "discord_id": discord_id
             })
@@ -274,3 +274,49 @@ def get_blacklist_status(discord_id):
     except SQLAlchemyError:
         return 400
     return result[0] if result else 0
+
+def get_resources(discord_id):
+    try:
+        with get_connection() as conn:
+            result = conn.execute(text("SELECT * FROM resources WHERE discord_id = :discord_id"),
+                                  {"discord_id": discord_id}).fetchone()
+    except SQLAlchemyError:
+        return 400
+    return result if result else False
+
+
+def update_cpu(discord_id, param):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("UPDATE users SET available_cpu = available_cpu + :param WHERE discord_id = :discord_id"), {
+                "param": param,
+                "discord_id": discord_id
+            })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+def update_ram(discord_id, param):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("UPDATE users SET available_ram = available_ram + :param WHERE discord_id = :discord_id"), {
+                "param": param,
+                "discord_id": discord_id
+            })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+def update_disk(discord_id, param):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("UPDATE users SET available_disk = available_disk + :param WHERE discord_id = :discord_id"), {
+                "param": param,
+                "discord_id": discord_id
+            })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200

@@ -84,19 +84,20 @@ def user_information(param):
 def help_embed():
     embed = discord.Embed(
         title="Help",
-        description="**Manage Account | <#1367445590795092010>**\n"
+        description=f"Run commands in <#{os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")}>"
+                    "**Manage Account**\n"
                     "/createaccount - Create an account.\n"
                     "/userinfo - Check your account information.\n\n"
 
-                    "**Manage Server | <#1367424445886631988>**\n"
+                    "**Manage Server**\n"
                     "/createserver - Create a server.\n"
                     "/serverinfo - Check the information of your server.\n"
                     "/deleteserver - Delete your server.\n"
+                    "/editserver - Edit your server's resources.\n"
                     "/renewserver - Renew your server.\n\n"
 
-                    "**Dabloons | <#1367424595824607302>**\n"
-                    "/givedabloons - Give dabloons to another user.\n"
-                    "/upgradeserver - Upgrade your server.\n"
+                    "**Coins**\n"
+                    "/givecoins - Give dabloons to another user.\n"
                     "/linkvertise - Get a linkvertise link to earn dabloons.\n"
                     "/buy - Buy some resources or items.",
         color=discord.Color.blue(),

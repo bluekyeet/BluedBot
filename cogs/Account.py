@@ -5,6 +5,7 @@ import requests
 import os
 import re
 import EmbedHandler
+import Logger
 from database import DatabaseHandler
 from discord import app_commands
 from discord.ext import commands
@@ -99,6 +100,7 @@ class Account(commands.Cog):
                             )
                         )
                         DatabaseHandler.create_user(interaction.user.id, response.json()['attributes']['id'])
+                        Logger.send_webhook(f"{interaction.user.mention} created an account.")
                     elif response.status_code == 422:
                         await interaction.user.send(
                             embed=EmbedHandler.warning(
@@ -150,12 +152,21 @@ class Account(commands.Cog):
                     return
                 user_information = DatabaseHandler.get_user_info(interaction.user.id)
                 coins = user_information[2]
-                server_slots = user_information[6]
+                server_slots = user_information[6] + int(os.getenv("DEFAULT_SERVER_SLOTS"))
                 used_slots = user_information[7]
+                cpu = int(user_information[9]) + int(os.getenv("DEFAULT_CPU"))
+                ram = int(user_information[10]) + int(os.getenv("DEFAULT_RAM"))
+                disk = int(user_information[11]) + int(os.getenv("DEFAULT_DISK"))
+                used_cpu = user_information[12]
+                used_ram = user_information[13]
+                used_disk = user_information[14]
                 await interaction.response.send_message(
                     embed=EmbedHandler.user_information(
                         f"Hello {interaction.user.mention}\n"
-                        f"Dabloons: {coins} dabloons\n"
+                        f"Coins: {coins} coins\n\n"
+                        f"CPU: {used_cpu}/{cpu}%\n"
+                        f"RAM: {used_ram}/{ram}GB\n"
+                        f"Disk: {used_disk}/{disk}GB\n"
                         f"Server slots: {used_slots}/{server_slots} servers."
                     )
                 )
