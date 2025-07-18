@@ -254,3 +254,23 @@ def check_if_invite_exists(inviter, user):
     except SQLAlchemyError:
         return 400
     return True
+
+def update_blacklist_status(discord_id, param):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("UPDATE users SET blacklist_status = :param WHERE discord_id = :discord_id"), {
+                "param": param,
+                "discord_id": discord_id
+            })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+def get_blacklist_status(discord_id):
+    try:
+        with get_connection() as conn:
+            result = conn.execute(text("SELECT blacklist_status FROM users WHERE discord_id = :discord_id"), {"discord_id": discord_id}).fetchone()
+    except SQLAlchemyError:
+        return 400
+    return result[0] if result else 0

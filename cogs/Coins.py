@@ -15,6 +15,13 @@ class Coins(commands.Cog):
     @app_commands.command(name="addcoins", description="Add an amount of coins to a specific user.")
     @app_commands.describe(user="The Discord user of the person you want to add coins to.", amount="The amount of coins you want to add to an user.")
     async def addcoins(self, interaction: discord.Interaction, user: discord.User, amount: int):
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="You don't have permission to use this command."
+                ), ephemeral=True
+            )
+            return
         if interaction.user.get_role(int(os.getenv("DISCORD_SERVER_ADMIN_ROLE_ID"))) is None:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
@@ -54,6 +61,13 @@ class Coins(commands.Cog):
     @app_commands.choices(item=[app_commands.Choice(name="Server slot | 500 coins", value=1)])
     @app_commands.describe(item="The item you want to buy.")
     async def buy(self, interaction: discord.Interaction, item: app_commands.Choice[int]):
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="You don't have permission to use this command."
+                ), ephemeral=True
+            )
+            return
         if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
@@ -118,6 +132,13 @@ class Coins(commands.Cog):
     @app_commands.command(name="boostrewards", description="Claim your boost rewards.")
     @app_commands.checks.cooldown(1, 5.0, key=lambda i: i.user.id)
     async def boostrewards(self, interaction: discord.Interaction):
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="You don't have permission to use this command."
+                ), ephemeral=True
+            )
+            return
         if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
@@ -168,6 +189,76 @@ class Coins(commands.Cog):
                     ephemeral=True
                 )
 
+            except Exception as e:
+                print(e)
+                await interaction.response.send_message(
+                    embed=EmbedHandler.error(
+                        message="Something went wrong. Please contact support."
+                    ),
+                    ephemeral=True
+                )
+
+    @app_commands.command(name="givecoins", description="Give an amount of coins to another user.")
+    @app_commands.checks.cooldown(1, 10.0, key=lambda i: i.user.id)
+    @app_commands.describe(user="The user you want to give coins to",
+                           amount="The amount of coins you want to give")
+    async def givecoins(self, interaction: discord.Interaction, user: discord.User, amount: int):
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="You don't have permission to use this command."
+                ), ephemeral=True
+            )
+            return
+        if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="Wrong channel!"
+                ),
+                ephemeral=True
+            )
+        else:
+            try:
+                if not DatabaseHandler.check_user_exists(interaction.user.id) or DatabaseHandler == 400:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.information(
+                            message="You don't have an account."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                if not DatabaseHandler.check_user_exists(user.id) or DatabaseHandler == 400:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="The person you are trying to give dabloons to does not have an account."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                if amount <= 0:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="You cannot give a person negative or zero dabloons."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                if DatabaseHandler.check_coin_count(interaction.user.id) < amount:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message=f"You do not have enough dabloons to give {DatabaseHandler.check_coin_count(interaction.user.id)} dabloons."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+                DatabaseHandler.update_coin_count(interaction.user.id, -amount)
+                DatabaseHandler.update_coin_count(user.id, amount)
+                await interaction.response.send_message(
+                    embed=EmbedHandler.success(
+                        message=f"You have successfully given {amount} dabloons to <@{user.id}>.\n"
+                                f"You now have {DatabaseHandler.check_coin_count(interaction.user.id)} dabloons left."
+                    )
+                )
             except Exception as e:
                 print(e)
                 await interaction.response.send_message(

@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, MetaData
+from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData
 
 metadata = MetaData()
 
@@ -13,6 +13,7 @@ users = Table(
     Column("lvcount_date", String, nullable=True),
     Column("avaliable_server_slots", Integer, default=1),
     Column("used_server_slots", Integer, default=0),
+    Column("blacklist_status", Integer, default=0),
 )
 
 servers = Table(
