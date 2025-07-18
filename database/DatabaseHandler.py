@@ -229,3 +229,28 @@ def update_server_slots(discord_id, param):
     except SQLAlchemyError:
         return 400
     return 200
+
+def add_invite(inviter, user):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("INSERT INTO invite(inviter, user) VALUES(:inviter, :user)"), {
+                "inviter": inviter,
+                "user": user
+            })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+def check_if_invite_exists(inviter, user):
+    try:
+        with get_connection() as conn:
+            result = conn.execute(text("SELECT * FROM invite WHERE inviter = :inviter AND userid = :user"), {
+                "server_id": inviter,
+                "userid": user
+            }).fetchone()
+        if not result or not result[0]:
+            return False
+    except SQLAlchemyError:
+        return 400
+    return True

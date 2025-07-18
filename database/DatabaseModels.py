@@ -23,3 +23,10 @@ servers = Table(
     Column("server_level", Integer, default=0),
     Column("server_last_renew_date", Integer)
 )
+
+invite = Table(
+    "invite",
+    metadata,
+    Column("inviter", Integer),
+    Column("userid", Integer),
+)

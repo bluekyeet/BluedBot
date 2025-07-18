@@ -8,11 +8,15 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from database.DatabaseEngine import engine
 from database.DatabaseModels import metadata
+from database import DatabaseHandler
+from datetime import datetime, timezone, timedelta
 
 load_dotenv()
 
 def initdb():
     metadata.create_all(engine)
+
+invite_cache = {}
 
 class BluedHostBot(commands.Bot):
     def __init__(self) -> None:
@@ -37,7 +41,7 @@ class BluedHostBot(commands.Bot):
         for ext in self.initial_extensions:
             await self.load_extension(ext)
 
-        await self.tree.sync(guild=discord.Object(id=1367424444850634863))
+        await self.tree.sync(guild=discord.Object(id=os.getenv("DISCORD_SERVER_ID")))
 
     async def close(self):
         await super().close()
@@ -46,7 +50,55 @@ class BluedHostBot(commands.Bot):
 
     async def on_ready(self):
         initdb()
+        if os.getenv("INVITE_REWARDS").lower() == "enable":
+            guild = bot.guilds[0]
+            invites = await guild.invites()
+            invite_cache[guild.id] = {invite.code: invite.uses for invite in invites}
         print(f'Logged in as {self.user} (ID: {self.user.id})')
+
+    async def on_member_join(self, member):
+        if os.getenv("INVITE_REWARDS").lower() == "enable":
+            guild = member.guild
+            new_invites = await guild.invites()
+            old_invites = invite_cache.get(guild.id, {})
+            used_invite = None
+
+            for invite in new_invites:
+                if invite.code in old_invites and invite.uses > old_invites[invite.code]:
+                    used_invite = invite
+                    break
+
+            invite_cache[guild.id] = {i.code: i.uses for i in new_invites}
+
+            if used_invite:
+                now = datetime.now(timezone.utc)
+                account_age = now - member.created_at
+                inviter = used_invite.inviter
+
+                if not DatabaseHandler.check_if_invite_exists(inviter.id, member.id):
+                    DatabaseHandler.add_invite(inviter.id, member.id)
+                    if account_age < timedelta(days=7):
+                        await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(
+                            f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}. Account age is less than 7 days.")
+                        return
+                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!, you were invited by {inviter.name}. {inviter.mention} has been rewarded with 30 dabloons for inviting you!")
+                    DatabaseHandler.update_coin_count(inviter.id, 30)
+                else:
+                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
+                    return
+            else:
+                await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! No invite detected.")
+
+    async def on_invite_create(self, invite):
+        if os.getenv("INVITE_REWARDS").lower() == "enable":
+            invites = await invite.guild.invites()
+            invite_cache[invite.guild.id] = {i.code: i.uses for i in invites}
+
+    async def on_invite_delete(self, invite):
+        if os.getenv("INVITE_REWARDS").lower() == "enable":
+            invites = await invite.guild.invites()
+            invite_cache[invite.guild.id] = {i.code: i.uses for i in invites}
+
 
 
 if str(os.getenv("LINKVERTISE_SYSTEM")).lower() == 'enable':
