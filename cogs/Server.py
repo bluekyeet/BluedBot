@@ -112,7 +112,7 @@ class Server(commands.Cog):
     @server_command.command(name="create", description="Create a server on BluedHost.")
     @app_commands.checks.cooldown(5, 10.0, key=lambda i: i.user.id)
     @app_commands.autocomplete(location=get_node_autocomplete, egg=get_egg_autocomplete)
-    @app_commands.describe(servername="The name of the server you want to create.", location="The location of the server.")
+    @app_commands.describe(name="The name of the server you want to create.", location="The location of the server.")
     async def create(self, interaction: discord.Interaction, name: str, location: str, egg: str, cpu: int, ram: int, disk: int):
         if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
