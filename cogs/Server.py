@@ -813,7 +813,7 @@ class Server(commands.Cog):
             get_information = requests.get(url=get_information_number_url, headers=get_information_number_headers)
             get_information_json = get_information.json()
             allocation_id = get_information_json['attributes']['allocation']
-            location = get_information_json['attributes']['location']
+            location = get_information_json['attributes']['node']
             egg = get_information_json['attributes']['egg']
 
             node = get_node_by_node_id(location)
