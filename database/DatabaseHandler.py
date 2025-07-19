@@ -109,14 +109,6 @@ def update_linkvertise_date(discord_id, param):
         return 400
     return 200
 
-def check_if_user_has_slots(discord_id):
-    try:
-        with get_connection() as conn:
-            result = conn.execute(text("SELECT available_server_slots, used_server_slots FROM users WHERE discord_id = :discord_id"), {"discord_id": discord_id}).fetchone()
-    except SQLAlchemyError:
-        return 400
-    return result and result[0] > result[1]
-
 def get_all_server_expiry_times():
     try:
         with get_connection() as conn:
