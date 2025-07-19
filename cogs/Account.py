@@ -165,8 +165,8 @@ class Account(commands.Cog):
                         f"Hello {interaction.user.mention}\n"
                         f"Coins: {coins} coins\n\n"
                         f"CPU: {used_cpu}/{cpu}%\n"
-                        f"RAM: {used_ram}/{ram}GB\n"
-                        f"Disk: {used_disk}/{disk}GB\n"
+                        f"RAM: {used_ram}/{ram}MB\n"
+                        f"Disk: {used_disk}/{disk}MB\n"
                         f"Server slots: {used_slots}/{server_slots} servers."
                     )
                 )

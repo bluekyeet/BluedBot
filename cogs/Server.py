@@ -162,7 +162,11 @@ class Server(commands.Cog):
                         ephemeral=True
                     )
 
-                if not DatabaseHandler.check_if_user_has_slots(interaction.user.id):
+                user_information = DatabaseHandler.get_user_info(interaction.user.id)
+                server_slots = (user_information[6] or 0) + int(os.getenv("DEFAULT_SERVER_SLOTS") or 0)
+                used_slots = (user_information[7] or 0)
+
+                if server_slots <= used_slots:
                     await interaction.response.send_message(
                         embed=EmbedHandler.information(
                             message="You have used up all your server slots."
@@ -171,8 +175,6 @@ class Server(commands.Cog):
                     )
                     return
 
-
-                user_information = DatabaseHandler.get_user_info(interaction.user.id)
                 cpu_available = int(user_information[9] or 0) + int(os.getenv("DEFAULT_CPU") or 0)
                 ram_available = int(user_information[10] or 0) + int(os.getenv("DEFAULT_RAM") or 0)
                 disk_available = int(user_information[11] or 0) + int(os.getenv("DEFAULT_DISK") or 0)
