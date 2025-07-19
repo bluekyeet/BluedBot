@@ -30,7 +30,7 @@ class Account(commands.Cog):
                 ), ephemeral=True
             )
             return
-        if interaction.channel.id != os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID"):
+        if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="Wrong channel!"
@@ -133,7 +133,7 @@ class Account(commands.Cog):
                 ), ephemeral=True
             )
             return
-        if interaction.channel.id != os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID"):
+        if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="Wrong channel!"
