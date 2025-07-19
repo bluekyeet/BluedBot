@@ -90,7 +90,7 @@ class Linkvertise(commands.Cog):
                 )
 
     @linkvertise.error
-    async def linkvertise_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+    async def error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(
                 f"This command is on cooldown. Please try again in {error.retry_after:.2f} seconds.",

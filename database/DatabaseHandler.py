@@ -122,14 +122,20 @@ def get_all_server_expiry_times():
     except SQLAlchemyError:
         return 400
 
-def add_server(server_id, user_id):
+def add_server(server_id, user_id, cpu, ram, disk):
     try:
         with get_connection() as conn:
             conn.execute(text("UPDATE users SET used_server_slots = used_server_slots + 1 WHERE user_uid = :user_id"), {"user_id": user_id})
-            conn.execute(text("INSERT INTO servers (server_id, user_uid, server_level, server_last_renew_date) VALUES (:server_id, :user_id, 0, :renew_date)"), {
+            conn.execute(text("UPDATE users SET used_cpu = used_cpu + :cpu WHERE user_uid = :user_id"),{"user_id": user_id, "cpu": cpu})
+            conn.execute(text("UPDATE users SET used_ram = used_ram + :ram WHERE user_uid = :user_id"),{"user_id": user_id, "ram": ram})
+            conn.execute(text("UPDATE users SET used_disk = used_disk + :disk WHERE user_uid = :user_id"),{"user_id": user_id, "disk": disk})
+            conn.execute(text("INSERT INTO servers (server_id, user_uid, server_level, server_last_renew_date, cpu, ram, disk) VALUES (:server_id, :user_id, 0, :renew_date, :cpu, :ram, :disk)"), {
                 "server_id": server_id,
                 "user_id": user_id,
-                "renew_date": int(datetime.datetime.now(datetime.UTC).timestamp())
+                "renew_date": int(datetime.datetime.now(datetime.timezone.utc).timestamp()),
+                "cpu": cpu,
+                "ram": ram,
+                "disk": disk
             })
             conn.commit()
     except SQLAlchemyError:
@@ -158,7 +164,7 @@ def renew_server(server_id):
     try:
         with get_connection() as conn:
             last_renew = get_single_server_info(server_id)[1]
-            now = int(datetime.datetime.now(datetime.UTC).timestamp())
+            now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
             renew_time = now if last_renew <= now - 604800 else last_renew + 604800
             conn.execute(text("UPDATE servers SET server_last_renew_date = :renew_time WHERE server_id = :server_id"), {
                 "renew_time": renew_time,
@@ -172,7 +178,7 @@ def renew_server(server_id):
 def get_all_servers_info(discord_id):
     try:
         with get_connection() as conn:
-            return conn.execute(text("SELECT server_id, server_level, server_last_renew_date FROM servers WHERE user_uid = :user_uid"), {
+            return conn.execute(text("SELECT server_id, server_level, server_last_renew_date, cpu, ram, disk FROM servers WHERE user_uid = :user_uid"), {
                 "user_uid": get_user_uid(discord_id)
             }).fetchall()
     except SQLAlchemyError:
@@ -181,7 +187,7 @@ def get_all_servers_info(discord_id):
 def get_single_server_info(server_id):
     try:
         with get_connection() as conn:
-            result = conn.execute(text("SELECT server_level, server_last_renew_date FROM servers WHERE server_id = :server_id"), {"server_id": server_id}).fetchone()
+            result = conn.execute(text("SELECT server_level, server_last_renew_date, cpu, ram, disk FROM servers WHERE server_id = :server_id"), {"server_id": server_id}).fetchone()
     except SQLAlchemyError:
         return 400
     return result if result else False
@@ -275,16 +281,6 @@ def get_blacklist_status(discord_id):
         return 400
     return result[0] if result else 0
 
-def get_resources(discord_id):
-    try:
-        with get_connection() as conn:
-            result = conn.execute(text("SELECT * FROM resources WHERE discord_id = :discord_id"),
-                                  {"discord_id": discord_id}).fetchone()
-    except SQLAlchemyError:
-        return 400
-    return result if result else False
-
-
 def update_cpu(discord_id, param):
     try:
         with get_connection() as conn:
@@ -316,6 +312,50 @@ def update_disk(discord_id, param):
                 "param": param,
                 "discord_id": discord_id
             })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+def update_used_resources(user_id, cpu, ram, disk):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("UPDATE users SET used_cpu = used_cpu + :cpu WHERE user_uid = :user_id"), {"user_id": user_id, "cpu": cpu})
+            conn.execute(text("UPDATE users SET used_ram = used_ram + :ram WHERE user_uid = :user_id"),{"user_id": user_id, "ram": ram})
+            conn.execute(text("UPDATE users SET used_disk = used_disk + :disk WHERE user_uid = :user_id"),{"user_id": user_id, "disk": disk})
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+def get_config():
+    try:
+        with get_connection() as conn:
+            result = conn.execute(text("SELECT * FROM config")).fetchone()
+    except SQLAlchemyError:
+        return 400
+    return result if result else False
+
+def update_renew_system(param):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("UPDATE config SET renew_system = :param"), {
+                "param": param
+            })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+
+def update_all_servers_expire():
+    try:
+        with get_connection() as conn:
+            renew_date = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+            conn.execute(
+                text("UPDATE servers SET server_last_renew_date = :renew_date"),
+                {"renew_date": renew_date}
+            )
             conn.commit()
     except SQLAlchemyError:
         return 400

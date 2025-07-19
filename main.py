@@ -2,7 +2,7 @@ import discord
 import os
 import aiohttp
 import threading
-from ServerExpiryChecker import checker
+from ServerExpiryChecker import checker, load_system
 from LinkvertiseWebserver import webserver
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -10,6 +10,8 @@ from database.DatabaseEngine import engine
 from database.DatabaseModels import metadata
 from database import DatabaseHandler
 from datetime import datetime, timezone, timedelta
+from eggs.EggLoader import load_eggs
+from nodes.NodesLoader import load_nodes
 
 load_dotenv()
 
@@ -27,7 +29,7 @@ class BluedHostBot(commands.Bot):
             help_command=None
         )
         self.session = None
-        self.initial_extensions = ["cogs.Coins", "cogs.Account", "cogs.Help", "cogs.Moderation"]
+        self.initial_extensions = ["cogs.Coins", "cogs.Account", "cogs.Help", "cogs.Moderation", "cogs.Server"]
 
         if str(os.getenv("LINKVERTISE_SYSTEM")).lower() == "enable":
             self.initial_extensions.append("cogs.Linkvertise")
@@ -35,6 +37,10 @@ class BluedHostBot(commands.Bot):
 
     async def setup_hook(self):
         self.session = aiohttp.ClientSession()
+        initdb()
+        load_eggs()
+        load_nodes()
+        load_system()
 
         for ext in self.initial_extensions:
             await self.load_extension(ext)
@@ -47,7 +53,6 @@ class BluedHostBot(commands.Bot):
             await self.session.close()
 
     async def on_ready(self):
-        initdb()
         if os.getenv("INVITE_REWARDS").lower() == "enable":
             guild = bot.guilds[0]
             invites = await guild.invites()
@@ -72,15 +77,17 @@ class BluedHostBot(commands.Bot):
                 now = datetime.now(timezone.utc)
                 account_age = now - member.created_at
                 inviter = used_invite.inviter
-
+                if DatabaseHandler.get_blacklist_status(inviter.id) != 0:
+                    return
                 if not DatabaseHandler.check_if_invite_exists(inviter.id, member.id):
                     DatabaseHandler.add_invite(inviter.id, member.id)
                     if account_age < timedelta(days=7):
                         await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(
                             f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}. Account age is less than 7 days.")
                         return
-                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!, you were invited by {inviter.name}. {inviter.mention} has been rewarded with 30 dabloons for inviting you!")
-                    DatabaseHandler.update_coin_count(inviter.id, 30)
+                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!, you were invited by {inviter.name}. {inviter.mention} has been rewarded with {os.getenv('INVITE_REWARD')} coins for inviting you!")
+                    DatabaseHandler.update_coin_count(inviter.id, os.getenv('INVITE_REWARD'))
+                    return
                 else:
                     await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
                     return

@@ -1,6 +1,5 @@
 import os
 import discord
-
 import Logger
 from database import DatabaseHandler
 import EmbedHandler
@@ -14,62 +13,15 @@ class Coins(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="addcoins", description="Add an amount of coins to a specific user.")
-    @app_commands.describe(user="The Discord user of the person you want to add coins to.", amount="The amount of coins you want to add to an user.")
-    async def addcoins(self, interaction: discord.Interaction, user: discord.User, amount: int):
-        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
-            await interaction.response.send_message(
-                embed=EmbedHandler.warning(
-                    message="You don't have permission to use this command."
-                ), ephemeral=True
-            )
-            return
-        if interaction.user.get_role(int(os.getenv("DISCORD_SERVER_ADMIN_ROLE_ID"))) is None:
-            await interaction.response.send_message(
-                embed=EmbedHandler.warning(
-                    message="You don't have permission to use this command."
-                ), ephemeral=True
-            )
-        else:
-            try:
-                if not DatabaseHandler.check_user_exists(user.id) or DatabaseHandler == 400:
-
-                    await interaction.response.send_message(
-                        embed=EmbedHandler.warning(
-                            message="The user you are trying to add coins to doesn't have an account."
-                        ),
-                        ephemeral=True
-                    )
-                    return
-
-                DatabaseHandler.update_coin_count(user.id, amount)
-
-                await interaction.response.send_message(
-                    embed=EmbedHandler.success(
-                        message=f"Added {amount} coins to <@{user.id}> successfully. They have {DatabaseHandler.check_coin_count(user.id)} coins now."
-                    )
-                )
-
-                Logger.send_webhook(f"{interaction.user.name} added {amount} coins to <@{user.id}>.")
-
-            except Exception as e:
-                print(e)
-                await interaction.response.send_message(
-                    embed=EmbedHandler.error(
-                        message="Something went wrong. Please contact support."
-                    ),
-                    ephemeral=True
-                )
-
     @app_commands.command(name="buy", description="Purchase resources for your server.")
     @app_commands.checks.cooldown(10, 5.0, key=lambda i: i.user.id)
     @app_commands.choices(item=[app_commands.Choice(name=f"Server slot | {os.getenv('SERVER_SLOT_PRICE')} coins", value=1),
                                 app_commands.Choice(name=f"CPU (per 100%) | {os.getenv('CPU_PRICE')} coins", value=2),
-                                app_commands.Choice(name=f"RAM (per GB) | {os.getenv('RAM_PRICE')} coins", value=3),
-                                app_commands.Choice(name=f"DISK (per GB) | {os.getenv('DISK_PRICE')} coins", value=4)])
+                                app_commands.Choice(name=f"RAM (per 1024 MB) | {os.getenv('RAM_PRICE')} coins", value=3),
+                                app_commands.Choice(name=f"DISK (per 1024 MB) | {os.getenv('DISK_PRICE')} coins", value=4)])
     @app_commands.describe(item="The item you want to buy.")
     async def buy(self, interaction: discord.Interaction, item: app_commands.Choice[int]):
-        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."
@@ -231,7 +183,7 @@ class Coins(commands.Cog):
     @app_commands.command(name="boostrewards", description="Claim your boost rewards.")
     @app_commands.checks.cooldown(1, 5.0, key=lambda i: i.user.id)
     async def boostrewards(self, interaction: discord.Interaction):
-        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."
@@ -302,7 +254,7 @@ class Coins(commands.Cog):
     @app_commands.describe(user="The user you want to give coins to",
                            amount="The amount of coins you want to give")
     async def givecoins(self, interaction: discord.Interaction, user: discord.User, amount: int):
-        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."

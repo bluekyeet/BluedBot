@@ -13,7 +13,7 @@ def checker():
         for serverid, last_renew_date in servers:
             if last_renew_date is None:
                 continue
-            if last_renew_date <= int((datetime.datetime.now(datetime.UTC).timestamp()-604800)//1):
+            if last_renew_date <= int((datetime.datetime.now(datetime.timezone.utc).timestamp()-(int(os.getenv("SERVER_RENEW_DAYS"))*86400))//1):
                 request = requests.post(f"{os.getenv("PANEL_URL")}/api/application/servers/{serverid}/suspend",
                                     headers={"Authorization": f"Bearer {os.getenv('PANEL_KEY')}",
                                             "Accept": "application/json",
@@ -22,3 +22,19 @@ def checker():
                     print(f"Server {serverid} suspended.")
 
         time.sleep(180)
+
+def load_system():
+    getconfig = DatabaseHandler.get_config()[0]
+    if getconfig == 2:
+        if os.getenv("SERVER_EXPIRY_SYSTEM").lower() == "enable":
+            DatabaseHandler.update_renew_system(1)
+        else:
+            DatabaseHandler.update_renew_system(0)
+    else:
+        if os.getenv("SERVER_EXPIRY_SYSTEM").lower() == "enable":
+            if getconfig == 0:
+                DatabaseHandler.update_renew_system(1)
+                DatabaseHandler.update_all_servers_expire()
+        else:
+            if getconfig == 1:
+                DatabaseHandler.update_renew_system(0)

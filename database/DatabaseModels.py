@@ -28,7 +28,10 @@ servers = Table(
     Column("server_id", Integer, primary_key=True),
     Column("user_uid", Integer),
     Column("server_level", Integer, default=0),
-    Column("server_last_renew_date", Integer)
+    Column("server_last_renew_date", Integer),
+    Column("cpu", Integer, default=0),
+    Column("ram", Integer, default=0),
+    Column("disk", Integer, default=0)
 )
 
 invite = Table(
@@ -36,4 +39,10 @@ invite = Table(
     metadata,
     Column("inviter", Integer),
     Column("userid", Integer),
+)
+
+config = Table(
+    "config",
+    metadata,
+    Column("renew_system", Integer, nullable=True, default=2),
 )
