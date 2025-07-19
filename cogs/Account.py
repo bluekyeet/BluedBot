@@ -153,13 +153,13 @@ class Account(commands.Cog):
                 user_information = DatabaseHandler.get_user_info(interaction.user.id)
                 coins = user_information[2]
                 server_slots = user_information[6] + int(os.getenv("DEFAULT_SERVER_SLOTS"))
-                used_slots = user_information[7]
-                cpu = int(user_information[9]) + int(os.getenv("DEFAULT_CPU"))
-                ram = int(user_information[10]) + int(os.getenv("DEFAULT_RAM"))
-                disk = int(user_information[11]) + int(os.getenv("DEFAULT_DISK"))
-                used_cpu = user_information[12]
-                used_ram = user_information[13]
-                used_disk = user_information[14]
+                used_slots = user_information[7] or 0
+                cpu = (user_information[9] or 0) + int(os.getenv("DEFAULT_CPU") or 0)
+                ram = (user_information[10] or 0) + int(os.getenv("DEFAULT_RAM") or 0)
+                disk = (user_information[11] or 0) + int(os.getenv("DEFAULT_DISK") or 0)
+                used_cpu = user_information[12] or 0
+                used_ram = user_information[13] or 0
+                used_disk = user_information[14] or 0
                 await interaction.response.send_message(
                     embed=EmbedHandler.user_information(
                         f"Hello {interaction.user.mention}\n"

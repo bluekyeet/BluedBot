@@ -56,7 +56,7 @@ class ConfirmDeleteView(discord.ui.View):
             cpu = server_info[2]
             ram = server_info[3]
             disk = server_info[4]
-            DatabaseHandler.update_used_resources(DatabaseHandler.get_user_uid(self.user_id), -cpu, -ram, -disk)
+            DatabaseHandler.update_used_resources(DatabaseHandler.get_user_uid(self.user_id), -int(cpu), -int(ram), -int(disk))
             Logger.send_webhook(f"{interaction.user.mention} deleted server {self.server_id} successfully!")
 
 def get_random_port(location_id):
@@ -173,12 +173,12 @@ class Server(commands.Cog):
 
 
                 user_information = DatabaseHandler.get_user_info(interaction.user.id)
-                cpu_available = int(user_information[9]) + int(os.getenv("DEFAULT_CPU"))
-                ram_available = int(user_information[10]) + int(os.getenv("DEFAULT_RAM"))
-                disk_available = int(user_information[11]) + int(os.getenv("DEFAULT_DISK"))
-                used_cpu = user_information[12]
-                used_ram = user_information[13]
-                used_disk = user_information[14]
+                cpu_available = int(user_information[9] or 0) + int(os.getenv("DEFAULT_CPU") or 0)
+                ram_available = int(user_information[10] or 0) + int(os.getenv("DEFAULT_RAM") or 0)
+                disk_available = int(user_information[11] or 0) + int(os.getenv("DEFAULT_DISK") or 0)
+                used_cpu = user_information[12] or 0
+                used_ram = user_information[13] or 0
+                used_disk = user_information[14] or 0
 
                 if cpu_available-used_cpu-cpu < 0:
                     await interaction.response.send_message(
@@ -715,12 +715,13 @@ class Server(commands.Cog):
                 using_disk = server_info[4]
 
                 user_information = DatabaseHandler.get_user_info(interaction.user.id)
-                cpu_available = int(user_information[9]) + int(os.getenv("DEFAULT_CPU"))
-                ram_available = int(user_information[10]) + int(os.getenv("DEFAULT_RAM"))
-                disk_available = int(user_information[11]) + int(os.getenv("DEFAULT_DISK"))
-                used_cpu = user_information[12]
-                used_ram = user_information[13]
-                used_disk = user_information[14]
+                cpu_available = (user_information[9] or 0) + int(os.getenv("DEFAULT_CPU") or 0)
+                ram_available = (user_information[10] or 0) + int(os.getenv("DEFAULT_RAM") or 0)
+                disk_available = (user_information[11] or 0) + int(os.getenv("DEFAULT_DISK") or 0)
+
+                used_cpu = user_information[12] or 0
+                used_ram = user_information[13] or 0
+                used_disk = user_information[14] or 0
 
                 if cpu is None:
                     cpu = using_cpu
