@@ -23,7 +23,7 @@ class Account(commands.Cog):
     @app_commands.checks.cooldown(1, 10.0, key=lambda i: i.user.id)
     @app_commands.describe(email="The email of the account you want to create.")
     async def createaccount(self, interaction: discord.Interaction, email: str):
-        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."
@@ -126,7 +126,7 @@ class Account(commands.Cog):
     @app_commands.command(name="userinfo", description="Check the information of your account.")
     @app_commands.checks.cooldown(15, 5.0, key=lambda i: i.user.id)
     async def userinfo(self, interaction: discord.Interaction):
-        if DatabaseHandler.get_blacklist_status(interaction.user.id) is not 0:
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."
@@ -192,4 +192,4 @@ class Account(commands.Cog):
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Account(bot), guilds=[discord.Object(id=1367424444850634863)])
+    await bot.add_cog(Account(bot), guilds=[discord.Object(id=os.getenv("DISCORD_SERVER_ID"))])
