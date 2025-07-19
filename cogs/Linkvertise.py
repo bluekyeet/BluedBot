@@ -31,63 +31,63 @@ class Linkvertise(commands.Cog):
                 ephemeral=True
             )
             return
-        if interaction.channel.id != os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID"):
+        if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="Wrong channel!"
                 ),
                 ephemeral=True
             )
-        else:
-            try:
-                if not DatabaseHandler.check_user_exists(interaction.user.id) or DatabaseHandler == 400:
-                    await interaction.response.send_message(
-                        embed=EmbedHandler.warning(
-                            message="You don't have an account."
-                        ),
-                        ephemeral=True
-                    )
-                    return
-                linkvertise_data = DatabaseHandler.get_linkvertise_info(interaction.user.id)
-
-                if linkvertise_data == 400:
-                    await interaction.response.send_message(
-                        embed=EmbedHandler.error(
-                            "Something went wrong. Please contact support."
-                        ),
-                        ephemeral=True
-                    )
-                    return
-                linkvertise_count = int(linkvertise_data[0])
-                linkvertise_date = linkvertise_data[1]
-
-                if linkvertise_count >= int(os.getenv("LINKVERTISE")):
-                    if datetime.date.fromisoformat(linkvertise_date) < datetime.date.today():
-                        DatabaseHandler.update_linkvertise_count(interaction.user.id, 0)
-                    else:
-                        await interaction.response.send_message(
-                            embed=EmbedHandler.warning(
-                                message="You have reached the maximum amount of Linkvertise attempts today."
-                            ),
-                            ephemeral=True
-                        )
-                        return
-
+        try:
+            if not DatabaseHandler.check_user_exists(interaction.user.id) or DatabaseHandler == 400:
                 await interaction.response.send_message(
-                    embed=EmbedHandler.information(
-                        message=f'Your Linkvertise link generation page is [here]({os.getenv("LINKVERTISE_LINK")}/generate?user_id={interaction.user.id}).'
+                    embed=EmbedHandler.warning(
+                        message="You don't have an account."
                     ),
                     ephemeral=True
                 )
+                return
+            linkvertise_data = DatabaseHandler.get_linkvertise_info(interaction.user.id)
 
-            except Exception as e:
-                print(e)
+            if linkvertise_data == 400:
                 await interaction.response.send_message(
                     embed=EmbedHandler.error(
-                        message="Something went wrong. Please contact support."
+                        "Something went wrong. Please contact support."
                     ),
                     ephemeral=True
                 )
+                return
+
+            linkvertise_count = int(linkvertise_data[0])
+            linkvertise_date = linkvertise_data[1]
+
+            if linkvertise_count >= int(os.getenv("LINKVERTISE")):
+                if datetime.date.fromisoformat(linkvertise_date) < datetime.date.today():
+                    DatabaseHandler.update_linkvertise_count(interaction.user.id, 0)
+                else:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="You have reached the maximum amount of Linkvertise attempts today."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+
+            await interaction.response.send_message(
+                embed=EmbedHandler.information(
+                    message=f'Your Linkvertise link generation page is [here]({os.getenv("LINKVERTISE_LINK")}/generate?user_id={interaction.user.id}).'
+                ),
+                ephemeral=True
+            )
+
+        except Exception as e:
+            print(e)
+            await interaction.response.send_message(
+                embed=EmbedHandler.error(
+                    message="Something went wrong. Please contact support."
+                ),
+                ephemeral=True
+            )
 
     @linkvertise.error
     async def error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):

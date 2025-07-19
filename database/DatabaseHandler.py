@@ -257,8 +257,8 @@ def check_if_invite_exists(inviter, user):
     try:
         with get_connection() as conn:
             result = conn.execute(text("SELECT * FROM invite WHERE inviter = :inviter AND userid = :user"), {
-                "server_id": inviter,
-                "userid": user
+                "inviter": inviter,
+                "user": user
             }).fetchone()
         if not result or not result[0]:
             return False
@@ -285,13 +285,11 @@ def get_blacklist_status(discord_id):
                 text("SELECT blacklist_status FROM users WHERE discord_id = :discord_id"),
                 {"discord_id": discord_id}
             ).fetchone()
-            print(f"Result from DB: {result}")  # DEBUG
 
             if result is None or result[0] is None:
                 return 0
             return result[0]
     except SQLAlchemyError as e:
-        print(f"SQL error: {e}")  # DEBUG
         return 400
 
 def update_cpu(discord_id, param):
@@ -384,3 +382,6 @@ def initialize_config_table():
                 conn.commit()
     except SQLAlchemyError as e:
         return 0
+
+
+    

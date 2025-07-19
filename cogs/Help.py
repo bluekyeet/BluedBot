@@ -15,8 +15,7 @@ class Help(commands.Cog):
     @app_commands.checks.cooldown(1, 10.0, key=lambda i: i.user.id)
     async def help(self, interaction: discord.Interaction):
         await interaction.response.send_message(
-            embed=EmbedHandler.help_embed(),
-            ephemeral=True
+            embed=EmbedHandler.help_embed()
         )
 
     @help.error

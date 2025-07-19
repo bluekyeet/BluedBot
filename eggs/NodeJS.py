@@ -3,12 +3,12 @@ def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int):
       "name": name,
       "user": userid,
       "egg": 15,
-      "docker_image": "ghcr.io/pelican-eggs/yolks:nodejs_24",
+      "docker_image": 'ghcr.io/pelican-eggs/yolks:nodejs_24',
       "startup": 'if [[ -d .git ]] && [[ {{AUTO_UPDATE}} == "1" ]]; then git pull; fi; if [[ ! -z ${NODE_PACKAGES} ]]; then /usr/local/bin/npm install ${NODE_PACKAGES}; fi; if [[ ! -z ${UNNODE_PACKAGES} ]]; then /usr/local/bin/npm uninstall ${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; if [[ "${MAIN_FILE}" == "*.js" ]]; then /usr/local/bin/node "/home/container/${MAIN_FILE}" ${NODE_ARGS}; else /usr/local/bin/ts-node --esm "/home/container/${MAIN_FILE}" ${NODE_ARGS}; fi',
       "environment": {
-        "AUTO_UPDATE": False,
+        "AUTO_UPDATE": 0,
         "MAIN_FILE": "index.js",
-        "USER_UPLOAD": False
+        "USER_UPLOAD": 0
       },
       "limits": {
         "memory": memory,

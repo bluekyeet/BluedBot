@@ -37,10 +37,13 @@ class BluedHostBot(commands.Bot):
 
     async def setup_hook(self):
         self.session = aiohttp.ClientSession()
-        DatabaseHandler.initialize_config_table()
+
         initdb()
         load_eggs()
         load_nodes()
+
+        DatabaseHandler.initialize_config_table()
+
         load_system()
 
         for ext in self.initial_extensions:
@@ -81,26 +84,26 @@ class BluedHostBot(commands.Bot):
                 if DatabaseHandler.get_blacklist_status(inviter.id) != 0:
                     return
                 if not DatabaseHandler.check_user_exists(inviter.id):
-                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
+                    await guild.get_channel(int(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID"))).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
                     return
                 if not DatabaseHandler.check_if_invite_exists(inviter.id, member.id):
                     DatabaseHandler.add_invite(inviter.id, member.id)
                     if account_age < timedelta(days=7):
-                        await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(
+                        await guild.get_channel(int(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID"))).send(
                             f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}. Account age is less than 7 days.")
                         return
-                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!, you were invited by {inviter.name}. {inviter.mention} has been rewarded with {os.getenv('INVITE_REWARD')} coins for inviting you!")
+                    await guild.get_channel(int(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID"))).send(f"Hello {member.mention}, welcome to the server!, you were invited by {inviter.name}. {inviter.mention} has been rewarded with {os.getenv('INVITE_REWARD')} coins for inviting you!")
                     DatabaseHandler.update_coin_count(inviter.id, os.getenv('INVITE_REWARD'))
                     return
                 else:
-                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
+                    await guild.get_channel(int(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID"))).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
                     return
             else:
-                await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!")
+                await guild.get_channel(int(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID"))).send(f"Hello {member.mention}, welcome to the server!")
                 return
         else:
             guild = member.guild
-            await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!")
+            await guild.get_channel(int(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID"))).send(f"Hello {member.mention}, welcome to the server!")
             return
 
     async def on_invite_create(self, invite):

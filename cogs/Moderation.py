@@ -13,7 +13,9 @@ class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="blacklist", description="The account you want to blacklist from the host.")
+    moderation_command = app_commands.Group(name="moderation", description="Moderation commands")
+
+    @moderation_command.command(name="blacklist", description="The account you want to blacklist from the host.")
     async def blacklist(self, interaction: discord.Interaction, user: discord.User):
         if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
@@ -36,7 +38,7 @@ class Moderation(commands.Cog):
         )
         DatabaseHandler.update_blacklist_status(user.id, 1)
 
-    @app_commands.command(name="unblacklist", description="The account you want to unblacklist from the host.")
+    @moderation_command.command(name="unblacklist", description="The account you want to unblacklist from the host.")
     async def unblacklist(self, interaction: discord.Interaction, user: discord.User):
         if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
@@ -59,7 +61,7 @@ class Moderation(commands.Cog):
         )
         DatabaseHandler.update_blacklist_status(user.id, 0)
 
-    @app_commands.command(name="addcoins", description="Add an amount of coins to a specific user.")
+    @moderation_command.command(name="addcoins", description="Add an amount of coins to a specific user.")
     @app_commands.describe(user="The Discord user of the person you want to add coins to.",
                            amount="The amount of coins you want to add to an user.")
     async def addcoins(self, interaction: discord.Interaction, user: discord.User, amount: int):
