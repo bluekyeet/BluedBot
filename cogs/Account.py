@@ -151,7 +151,7 @@ class Account(commands.Cog):
                     )
                     return
                 user_information = DatabaseHandler.get_user_info(interaction.user.id)
-                coins = user_information[2]
+                coins = (user_information[2] or 0)
                 server_slots = (user_information[6] or 0) + int(os.getenv("DEFAULT_SERVER_SLOTS") or 0)
                 used_slots = (user_information[7] or 0)
                 cpu = (user_information[9] or 0) + int(os.getenv("DEFAULT_CPU") or 0)
