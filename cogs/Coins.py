@@ -62,7 +62,7 @@ class Coins(commands.Cog):
             disk = (int(user_information[11]) or 0)
             cpu_price = int(os.getenv("CPU_PRICE"))
             ram_price = int(os.getenv("RAM_PRICE"))
-            disk_price = int(os.getenv("Disk_PRICE"))
+            disk_price = int(os.getenv("DISK_PRICE"))
             if item.value == 1:
                 if server_slots >= int(os.getenv("SERVER_SLOT_LIMIT")):
                     await interaction.response.send_message(
