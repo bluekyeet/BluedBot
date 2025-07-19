@@ -96,7 +96,7 @@ class Account(commands.Cog):
                                 message=f"Successfully created account.\n"
                                         f"Username: {str(interaction.user.id)}\n"
                                         f"Password: {password}\n"
-                                        f"Link: https://panel.bluedhost.org/"
+                                        f"Link: {os.getenv("PANEL_URL")}"
                             )
                         )
                         DatabaseHandler.create_user(interaction.user.id, response.json()['attributes']['id'])

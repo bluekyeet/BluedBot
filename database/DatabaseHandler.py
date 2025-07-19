@@ -292,7 +292,7 @@ def get_blacklist_status(discord_id):
             result = conn.execute(text("SELECT blacklist_status FROM users WHERE discord_id = :discord_id"), {"discord_id": discord_id}).fetchone()
     except SQLAlchemyError:
         return 400
-    return result[0] if result else 0
+    return result[0] or 0 if result else 0
 
 def update_cpu(discord_id, param):
     try:
