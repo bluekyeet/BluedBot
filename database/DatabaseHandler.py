@@ -289,10 +289,18 @@ def update_blacklist_status(discord_id, param):
 def get_blacklist_status(discord_id):
     try:
         with get_connection() as conn:
-            result = conn.execute(text("SELECT blacklist_status FROM users WHERE discord_id = :discord_id"), {"discord_id": discord_id}).fetchone()
-    except SQLAlchemyError:
+            result = conn.execute(
+                text("SELECT blacklist_status FROM users WHERE discord_id = :discord_id"),
+                {"discord_id": discord_id}
+            ).fetchone()
+            print(f"Result from DB: {result}")  # DEBUG
+
+            if result is None or result[0] is None:
+                return 0
+            return result[0]
+    except SQLAlchemyError as e:
+        print(f"SQL error: {e}")  # DEBUG
         return 400
-    return result[0] or 0 if result else 0
 
 def update_cpu(discord_id, param):
     try:
