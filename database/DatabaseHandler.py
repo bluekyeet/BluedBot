@@ -1,4 +1,6 @@
 import datetime
+import os
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from database.DatabaseConfig import DB_BACKEND, MYSQL_CONFIG, SQLITE_PATH
@@ -165,7 +167,7 @@ def renew_server(server_id):
         with get_connection() as conn:
             last_renew = get_single_server_info(server_id)[1]
             now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
-            renew_time = now if last_renew <= now - 604800 else last_renew + 604800
+            renew_time = now if last_renew <= now - (int(os.getenv("SERVER_RENEW_DAYS"))*86400) else last_renew + (int(os.getenv("SERVER_RENEW_DAYS"))*86400)
             conn.execute(text("UPDATE servers SET server_last_renew_date = :renew_time WHERE server_id = :server_id"), {
                 "renew_time": renew_time,
                 "server_id": server_id
@@ -209,6 +211,17 @@ def upgrade_server(server_id, level):
                 "level": level,
                 "server_id": server_id
             })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
+def edit_server(server_id, cpu, ram, disk):
+    try:
+        with get_connection() as conn:
+            conn.execute(text("UPDATE servers SET cpu = :cpu WHERE server_id = :server_id"), {"cpu": cpu, "server_id": server_id})
+            conn.execute(text("UPDATE servers SET ram = :ram WHERE server_id = :server_id"),{"ram": ram, "server_id": server_id})
+            conn.execute(text("UPDATE servers SET disk = :disk WHERE server_id = :server_id"),{"disk": disk, "server_id": server_id})
             conn.commit()
     except SQLAlchemyError:
         return 400
@@ -360,3 +373,14 @@ def update_all_servers_expire():
     except SQLAlchemyError:
         return 400
     return 200
+
+
+def initialize_config_table():
+    try:
+        with get_connection() as conn:
+            result = conn.execute(text("SELECT COUNT(*) FROM config")).scalar()
+            if result == 0:
+                conn.execute(text("INSERT INTO config (renew_system) VALUES (2)"))
+                conn.commit()
+    except SQLAlchemyError as e:
+        return 0

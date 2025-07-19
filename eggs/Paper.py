@@ -2,7 +2,7 @@ def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int):
     config = {
       "name": name,
       "user": userid,
-      "egg": 1,
+      "egg": 4,
       "docker_image": "ghcr.io/parkervcp/yolks:java_21",
       "startup": "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}",
       "environment": {

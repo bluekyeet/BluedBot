@@ -25,16 +25,14 @@ def checker():
 
 def load_system():
     getconfig = DatabaseHandler.get_config()[0]
+    system_enabled = os.getenv("SERVER_EXPIRY_SYSTEM", "").lower() == "enable"
+
     if getconfig == 2:
-        if os.getenv("SERVER_EXPIRY_SYSTEM").lower() == "enable":
-            DatabaseHandler.update_renew_system(1)
-        else:
-            DatabaseHandler.update_renew_system(0)
-    else:
-        if os.getenv("SERVER_EXPIRY_SYSTEM").lower() == "enable":
-            if getconfig == 0:
-                DatabaseHandler.update_renew_system(1)
-                DatabaseHandler.update_all_servers_expire()
-        else:
-            if getconfig == 1:
-                DatabaseHandler.update_renew_system(0)
+        DatabaseHandler.update_renew_system(1 if system_enabled else 0)
+
+    elif getconfig == 0 and system_enabled:
+        DatabaseHandler.update_renew_system(1)
+        DatabaseHandler.update_all_servers_expire()
+
+    elif getconfig == 1 and not system_enabled:
+        DatabaseHandler.update_renew_system(0)

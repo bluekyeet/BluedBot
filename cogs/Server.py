@@ -6,6 +6,7 @@ import requests
 import datetime
 import re
 import EmbedHandler
+import Logger
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -56,6 +57,7 @@ class ConfirmDeleteView(discord.ui.View):
             ram = server_info[3]
             disk = server_info[4]
             DatabaseHandler.update_used_resources(DatabaseHandler.get_user_uid(self.user_id), -cpu, -ram, -disk)
+            Logger.send_webhook(f"{interaction.user.mention} deleted server {self.server_id} successfully!")
 
 def get_random_port(location_id):
     url = f"{os.getenv('PANEL_URL')}/api/application/nodes/{location_id}/allocations"
@@ -87,13 +89,27 @@ def get_random_port(location_id):
     else:
         return "No available ports in the specified location."
 
+async def get_egg_autocomplete(interaction: discord.Interaction, current: str):
+    return [
+        app_commands.Choice(name=egg, value=egg)
+        for egg in EGG_MODULES
+        if current.lower() in egg.lower()
+    ]
+
+async def get_node_autocomplete(interaction: discord.Interaction, current: str):
+    return [
+        app_commands.Choice(name=node, value=node)
+        for node in NODES
+        if current.lower() in node.lower()
+    ]
+
 class Server(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     @app_commands.command(name="createserver", description="Create a server on BluedHost.")
     @app_commands.checks.cooldown(5, 10.0, key=lambda i: i.user.id)
-    @app_commands.autocomplete(location=list(NODES.keys()), egg=list(EGG_MODULES.keys()))
+    @app_commands.autocomplete(location=get_node_autocomplete, egg=get_egg_autocomplete)
     @app_commands.describe(servername="The name of the server you want to create.", location="The location of the server.")
     async def createserver(self, interaction: discord.Interaction, servername: str, location: str, egg: str, cpu: int, ram: int, disk: int):
         if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
@@ -223,6 +239,14 @@ class Server(commands.Cog):
                 location_id = node_info["node_id"]
                 port = get_random_port(location_id)
 
+                if egg.lower() in eggs_blacklist:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.error(
+                            message="This location doesn't support this egg."
+                        ),
+                        ephemeral=True
+                    )
+
                 if port == "No available ports in the specified location.":
                     await interaction.response.send_message(
                         embed=EmbedHandler.server_creation(
@@ -311,6 +335,7 @@ class Server(commands.Cog):
 
                 response = requests.request('POST', url, json=config, headers=headers)
                 if response.status_code == 201:
+                    Logger.send_webhook(f"{interaction.user.mention} has created server with ID of {int(response.json()['attributes']['id'])}, {cpu}% CPU, {ram}MB RAM, and {disk}MB DISK.")
                     DatabaseHandler.add_server(int(response.json()['attributes']['id']), DatabaseHandler.get_user_uid(interaction.user.id), cpu, ram, disk)
                     if os.getenv("SERVER_EXPIRY_SYSTEM").lower() == "enable":
                         embed=EmbedHandler.server_creation(
@@ -405,6 +430,8 @@ class Server(commands.Cog):
                     ),
                     view=view
                 )
+                time.sleep(60)
+                await interaction.delete_original_response()
             except Exception as e:
                 print(e)
                 await interaction.response.send_message(
@@ -462,7 +489,7 @@ class Server(commands.Cog):
                 if coincount < os.getenv("SERVER_RENEW_PRICE"):
                     await interaction.response.send_message(
                         embed=EmbedHandler.warning(
-                            message=f"You don't have enough coins to renew your server. You need at least {os.getenv('SERVER_RENEW_PRICE')} dabloons."
+                            message=f"You don't have enough coins to renew your server. You need at least {os.getenv('SERVER_RENEW_PRICE')} coins."
                         ),
                         ephemeral=True
                     )
@@ -470,6 +497,7 @@ class Server(commands.Cog):
                 else:
                     DatabaseHandler.update_coin_count(interaction.user.id, -int(os.getenv("SERVER_RENEW_PRICE")))
                     DatabaseHandler.renew_server(server_id)
+                    Logger.send_webhook(f"{interaction.user.mention} renewed their server with id of {server_id}")
                     await interaction.response.send_message(
                         embed=EmbedHandler.success(
                             message=f"Successfully renewed your server. You have {coincount - os.getenv('SERVER_RENEW_PRICE')} coins left.\n"
@@ -547,7 +575,11 @@ class Server(commands.Cog):
                             ephemeral=True
                         )
                         return
-                    await interaction.response.send_message("Loading...")
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.information(
+                            message="Loading your server's information..."
+                        )
+                    )
                     server_expire_date = server_info[1]
                     if os.getenv('SERVER_EXPIRY_SYSTEM').lower() == "enable":
                         if int(server_expire_date) + (int(os.getenv("SERVER_RENEW_DAYS"))*86400) == datetime.datetime.now(datetime.UTC).timestamp():
@@ -594,7 +626,11 @@ class Server(commands.Cog):
                             ephemeral=True
                         )
                         return
-                    await interaction.response.send_message("Loading...")
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.information(
+                            message="Loading all your servers' information..."
+                        )
+                    )
                     server_information = ""
                     for server in server_info:
                         get_server_name_url = f"{os.getenv('PANEL_URL')}/api/application/servers/{server[0]}"
@@ -635,10 +671,153 @@ class Server(commands.Cog):
                 )
                 return
 
+    @app_commands.command(name="editserver", description="Edit resources of your server.")
+    @app_commands.checks.cooldown(5, 10.0, key=lambda i: i.user.id)
+    @app_commands.describe(server_id="The ID of the server you want to edit.")
+    async def editserver(self, interaction: discord.Interaction, server_id: int, cpu: int = None, ram: int = None, disk: int = None):
+        if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="You don't have permission to use this command."
+                ), ephemeral=True
+            )
+            return
+        if interaction.channel.id != int(os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")):
+            await interaction.response.send_message(
+                embed=EmbedHandler.warning(
+                    message="Wrong channel!"
+                ),
+                ephemeral=True
+            )
+        else:
+            try:
+                if not DatabaseHandler.check_user_exists(interaction.user.id) or DatabaseHandler == 400:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="You don't have an account."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+
+                if not DatabaseHandler.check_if_user_owns_that_server(interaction.user.id, server_id):
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.warning(
+                            message="You don't own that server."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+
+                server_info = DatabaseHandler.get_single_server_info(interaction.user.id)
+                using_cpu = server_info[2]
+                using_ram = server_info[3]
+                using_disk = server_info[4]
+
+                user_information = DatabaseHandler.get_user_info(interaction.user.id)
+                cpu_available = int(user_information[9]) + int(os.getenv("DEFAULT_CPU"))
+                ram_available = int(user_information[10]) + int(os.getenv("DEFAULT_RAM"))
+                disk_available = int(user_information[11]) + int(os.getenv("DEFAULT_DISK"))
+                used_cpu = user_information[12]
+                used_ram = user_information[13]
+                used_disk = user_information[14]
+
+                if cpu is None:
+                    cpu = using_cpu
+                if ram is None:
+                    ram = using_ram
+                if disk is None:
+                    disk = using_disk
+
+                if used_cpu - using_cpu + cpu > cpu_available:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.information(
+                            message="You don't have enough CPU to complete this action."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+
+                if used_ram - using_ram + ram > ram_available:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.information(
+                            message="You don't have enough RAM to complete this action."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+
+                if used_disk - using_disk + disk > disk_available:
+                    await interaction.response.send_message(
+                        embed=EmbedHandler.information(
+                            message="You don't have enough DISK to complete this action."
+                        ),
+                        ephemeral=True
+                    )
+                    return
+
+                await interaction.response.send_message(
+                    embed=EmbedHandler.information(
+                        message="Editing server resources..."
+                    )
+                )
+
+                DatabaseHandler.update_used_resources(DatabaseHandler.get_user_uid(interaction.user.id), -using_cpu + cpu, -using_ram + ram, -using_disk + disk)
+                DatabaseHandler.edit_server(server_id, cpu, ram, disk)
+
+                get_allocation_number_url = f"{os.getenv('PANEL_URL')}/api/application/servers/{server_id}"
+                get_allocation_number_headers = {
+                    "Authorization": f"Bearer {os.getenv('PANEL_KEY')}",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                }
+                get_allocation_number = requests.get(url=get_allocation_number_url, headers=get_allocation_number_headers)
+                get_allocation_number_json = get_allocation_number.json()
+                allocation_id = get_allocation_number_json['attributes']['allocation']
+                url = f"{os.getenv('PANEL_URL')}/api/application/servers/{server_id}/build"
+                headers = {
+                    "Authorization": f"Bearer {os.getenv('PANEL_KEY')}",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                }
+                payload = {
+                    "allocation": allocation_id,
+                    "memory": ram,
+                    "swap": -1,
+                    "disk": disk,
+                    "io": 500,
+                    "cpu": cpu,
+                    "feature_limits": {
+                        "databases": 0,
+                        "backups": 0
+                    }
+                }
+                requests.patch(url=url, json=payload, headers=headers)
+                await interaction.edit_original_response(
+                    embed=EmbedHandler.success(
+                        f"**Edited server**\n"
+                        f"- Server ID: {server_id}\n"
+                        f"- CPU: {cpu}%\n"
+                        f"- RAM: {ram}MB\n"
+                        f"- DISK: {disk}MB"
+                    )
+                )
+
+            except Exception as e:
+                print(e)
+                await interaction.response.send_message(
+                    embed=EmbedHandler.error(
+                        message="Something went wrong. Please contact support."
+                    ),
+                    ephemeral=True
+                )
+                return
+
     @serverinfo.error
     @createserver.error
     @serverinfo.error
     @deleteserver.error
+    @editserver.error
     async def error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(

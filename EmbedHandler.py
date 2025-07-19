@@ -82,9 +82,17 @@ def user_information(param):
 
 
 def help_embed():
+    if os.getenv("LINKVERTISE_SYSTEM").lower() == "enable":
+        linkvertise = "/linkvertise - Get a linkvertise link to earn coins.\n"
+    else:
+        linkvertise = ""
+    if os.getenv("SERVER_EXPIRY_SYSTEM").lower() == "enable":
+        renew = "/renewserver - Renew your server.\n"
+    else:
+        renew = ""
     embed = discord.Embed(
         title="Help",
-        description=f"Run commands in <#{os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")}>"
+        description=f"Run commands in <#{os.getenv("DISCORD_SERVER_COMMAND_CHANNEL_ID")}>\n"
                     "**Manage Account**\n"
                     "/createaccount - Create an account.\n"
                     "/userinfo - Check your account information.\n\n"
@@ -94,11 +102,11 @@ def help_embed():
                     "/serverinfo - Check the information of your server.\n"
                     "/deleteserver - Delete your server.\n"
                     "/editserver - Edit your server's resources.\n"
-                    "/renewserver - Renew your server.\n\n"
+                    f"{renew}\n"
 
                     "**Coins**\n"
-                    "/givecoins - Give dabloons to another user.\n"
-                    "/linkvertise - Get a linkvertise link to earn dabloons.\n"
+                    "/givecoins - Give coins to another user.\n"
+                    f"{linkvertise}"
                     "/buy - Buy some resources or items.",
         color=discord.Color.blue(),
         timestamp=discord.utils.utcnow()

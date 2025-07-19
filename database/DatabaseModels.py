@@ -44,5 +44,5 @@ invite = Table(
 config = Table(
     "config",
     metadata,
-    Column("renew_system", Integer, nullable=True, default=2),
+    Column("renew_system", Integer, nullable=True, default=2)
 )

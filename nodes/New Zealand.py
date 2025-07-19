@@ -3,7 +3,7 @@ def node():
         "name": "New Zealand",
         "node_id": 1
     }
-    eggs_blacklist = ["Paper", "Fabric"]
+    eggs_blacklist = ["paper", "fabric", "forge", "waterfall", "velocity"]
     node_server_limit = {
         "cpu": 50,
         "ram": 512,

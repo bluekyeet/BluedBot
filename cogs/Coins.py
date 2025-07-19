@@ -72,6 +72,7 @@ class Coins(commands.Cog):
                         )
                         return
                     if coins >= server_slot_price:
+                        Logger.send_webhook(f"{interaction.user.mention} bought a server slot.")
                         DatabaseHandler.update_coin_count(interaction.user.id, -server_slot_price)
                         DatabaseHandler.update_server_slots(interaction.user.id, 1)
                         await interaction.response.send_message(
@@ -80,6 +81,7 @@ class Coins(commands.Cog):
                                         f"You now have {coins - server_slot_price} coins left."
                             )
                         )
+                        return
                     else:
                         await interaction.response.send_message(
                             embed=EmbedHandler.warning(
@@ -97,6 +99,7 @@ class Coins(commands.Cog):
                         )
                         return
                     if coins >= cpu_price:
+                        Logger.send_webhook(f"{interaction.user.mention} bought 100% CPU.")
                         DatabaseHandler.update_coin_count(interaction.user.id, -cpu_price)
                         DatabaseHandler.update_cpu(interaction.user.id, 1)
                         await interaction.response.send_message(
@@ -122,11 +125,12 @@ class Coins(commands.Cog):
                         )
                         return
                     if coins >= ram_price:
+                        Logger.send_webhook(f"{interaction.user.mention} bought 1024MB RAM")
                         DatabaseHandler.update_coin_count(interaction.user.id, -ram_price)
                         DatabaseHandler.update_cpu(interaction.user.id, 1)
                         await interaction.response.send_message(
                             embed=EmbedHandler.success(
-                                message=f"You have bought 1 GB of RAM for {ram_price} coins.\n"
+                                message=f"You have bought 1024 MB of RAM for {ram_price} coins.\n"
                                         f"You now have {coins - ram_price} coins left."
                             )
                         )
@@ -147,11 +151,12 @@ class Coins(commands.Cog):
                         )
                         return
                     if coins >= disk_price:
+                        Logger.send_webhook(f"{interaction.user.mention} bought 1024 MB DISK.")
                         DatabaseHandler.update_coin_count(interaction.user.id, -disk_price)
                         DatabaseHandler.update_cpu(interaction.user.id, 1)
                         await interaction.response.send_message(
                             embed=EmbedHandler.success(
-                                message=f"You have bought 1 GB of DISK for {disk_price} coins.\n"
+                                message=f"You have bought 1024 MB of DISK for {disk_price} coins.\n"
                                         f"You now have {coins - disk_price} coins left."
                             )
                         )
@@ -231,6 +236,7 @@ class Coins(commands.Cog):
                         ephemeral=True
                     )
                     return
+                Logger.send_webhook(f"{interaction.user.mention} claimed their boost reward.")
                 DatabaseHandler.update_coin_count(interaction.user.id, int(os.getenv("DISCORD_BOOST_REWARD_COINS")))
                 DatabaseHandler.update_boost_rewards_claimed(interaction.user.id, 1)
                 await interaction.response.send_message(
@@ -281,7 +287,7 @@ class Coins(commands.Cog):
                 if not DatabaseHandler.check_user_exists(user.id) or DatabaseHandler == 400:
                     await interaction.response.send_message(
                         embed=EmbedHandler.warning(
-                            message="The person you are trying to give dabloons to does not have an account."
+                            message="The person you are trying to give coins to does not have an account."
                         ),
                         ephemeral=True
                     )
@@ -289,7 +295,7 @@ class Coins(commands.Cog):
                 if amount <= 0:
                     await interaction.response.send_message(
                         embed=EmbedHandler.warning(
-                            message="You cannot give a person negative or zero dabloons."
+                            message="You cannot give a person negative or zero coins."
                         ),
                         ephemeral=True
                     )
@@ -297,17 +303,18 @@ class Coins(commands.Cog):
                 if DatabaseHandler.check_coin_count(interaction.user.id) < amount:
                     await interaction.response.send_message(
                         embed=EmbedHandler.warning(
-                            message=f"You do not have enough dabloons to give {DatabaseHandler.check_coin_count(interaction.user.id)} dabloons."
+                            message=f"You do not have enough coins to give {DatabaseHandler.check_coin_count(interaction.user.id)} coins."
                         ),
                         ephemeral=True
                     )
                     return
+                Logger.send_webhook(f"{interaction.user.mention} gave {amount} coins to {user.mention}.")
                 DatabaseHandler.update_coin_count(interaction.user.id, -amount)
                 DatabaseHandler.update_coin_count(user.id, amount)
                 await interaction.response.send_message(
                     embed=EmbedHandler.success(
-                        message=f"You have successfully given {amount} dabloons to <@{user.id}>.\n"
-                                f"You now have {DatabaseHandler.check_coin_count(interaction.user.id)} dabloons left."
+                        message=f"You have successfully given {amount} coins to <@{user.id}>.\n"
+                                f"You now have {DatabaseHandler.check_coin_count(interaction.user.id)} coins left."
                     )
                 )
             except Exception as e:

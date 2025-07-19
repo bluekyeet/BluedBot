@@ -37,6 +37,7 @@ class BluedHostBot(commands.Bot):
 
     async def setup_hook(self):
         self.session = aiohttp.ClientSession()
+        DatabaseHandler.initialize_config_table()
         initdb()
         load_eggs()
         load_nodes()
@@ -79,6 +80,9 @@ class BluedHostBot(commands.Bot):
                 inviter = used_invite.inviter
                 if DatabaseHandler.get_blacklist_status(inviter.id) != 0:
                     return
+                if not DatabaseHandler.check_user_exists(inviter.id):
+                    await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
+                    return
                 if not DatabaseHandler.check_if_invite_exists(inviter.id, member.id):
                     DatabaseHandler.add_invite(inviter.id, member.id)
                     if account_age < timedelta(days=7):
@@ -92,7 +96,12 @@ class BluedHostBot(commands.Bot):
                     await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! You were invited by {inviter.name}.")
                     return
             else:
-                await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server! No invite detected.")
+                await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!")
+                return
+        else:
+            guild = member.guild
+            await guild.get_channel(os.getenv("DISCORD_SERVER_WELCOME_INVITE_CHANNEL_ID")).send(f"Hello {member.mention}, welcome to the server!")
+            return
 
     async def on_invite_create(self, invite):
         if os.getenv("INVITE_REWARDS").lower() == "enable":
