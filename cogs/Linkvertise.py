@@ -58,11 +58,11 @@ class Linkvertise(commands.Cog):
                 )
                 return
 
-            linkvertise_count = int(linkvertise_data[0])
+            linkvertise_count = (int(linkvertise_data[0] or 0))
             linkvertise_date = linkvertise_data[1]
 
             if linkvertise_count >= int(os.getenv("LINKVERTISE")):
-                if datetime.date.fromisoformat(linkvertise_date) < datetime.date.today():
+                if datetime.date.fromisoformat(linkvertise_date) < datetime.date.today() or linkvertise_date is None:
                     DatabaseHandler.update_linkvertise_count(interaction.user.id, 0)
                 else:
                     await interaction.response.send_message(
