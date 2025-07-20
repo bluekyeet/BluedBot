@@ -16,6 +16,8 @@
 - Linkvertise integration *(optional, reverse proxy required — see below)*
 - Coin gifting between users
 - Shop to buy additional resources
+- Automatic invite rewards
+- Staffless boost rewards
 
 ### 🔁 Renewal System
 - Automatic resource/server renewal checks
