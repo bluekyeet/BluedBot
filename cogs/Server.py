@@ -675,9 +675,9 @@ class Server(commands.Cog):
                         server_expire_date = ""
                     server_information += f"- Server Name: {server_name}\n"
                     server_information += f"- Server ID: {server_id}\n"
-                    server_information += f"- CPU: {server[2]}%\n"
-                    server_information += f"- RAM: {server[3]}MB\n"
-                    server_information += f"- DISK: {server[4]}MB"
+                    server_information += f"- CPU: {server[3]}%\n"
+                    server_information += f"- RAM: {server[4]}MB\n"
+                    server_information += f"- DISK: {server[5]}MB"
                     server_information += f"{server_expire_date}\n"
                 server_information += f"**Total Servers:** {len(server_info)}"
                 await interaction.edit_original_response(embed=EmbedHandler.server_information(server_information))
