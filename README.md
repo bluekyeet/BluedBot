@@ -1,45 +1,76 @@
 # BluedBot
-## A powerful client panel for Pelican Panel all in a Discord bot.
 
-BluedBot is a Discord bot built for being a client panel for [Pelican Panel](https://github.com/pelican-dev/panel). Built on Python with usablity on mind!
+> A powerful client panel for [Pelican Panel](https://github.com/pelican-dev/panel), all in a Discord bot.
 
-## Features
-- Resource system 
--- Default resources
--- Additional resources
-- Coins (Linkvertise earning, away)
--- Linkvertise
--- Gifting coins
--- Shop for resources
-- Renewal system
--- Automatic checking
--- Costs coins to renew
-- Servers system
--- Create servers
--- View server information
--- Edit server details
--- Delete servers
-- Account system
--- Create account
--- View account details
-- Admin/moderation
--- Blacklisting user from usage of bot (requires for user to be already signed up to bot.)
--- Adding coins and resources to an user
-- Node/egg system
--- Easy to add and edit details
--- Easy to add limits of each thing
+**BluedBot** is a Discord bot built with usability in mind. It acts as a client panel for Pelican Panel, using Python for flexibility and performance.
 
-Post an [issue](https://github.com/bluekyeet/BluedBot/issues) if any bugs occur.
-Join our [Discord server](https://discord.gg/SdyRkZ5HQM) for support!
+---
 
-## Installation
-BluedBot requires Python 3.12 to run.
+## 🌟 Features
 
-Install the requirements and create the .env file with the .example.env
-```sh
-pip install -r requirements.txt
-cp .example.env .env
-```
-Edit the .env file and the nodes/eggs folders.
+### 🧱 Resource System
+- Built-in default resources
+- Support for custom/additional resources
 
-***NOTE: IF YOU WANT LINKVERTISE TO WORK MAKE SURE TO CREATE A REVERSE PROXY IN NGINX OR YOUR WEBSERVER TO THE SPECIFIED PORT IN THE CONFIG***
+### 💰 Coins System
+- Linkvertise integration *(optional, reverse proxy required — see below)*
+- Coin gifting between users
+- Shop to buy additional resources
+
+### 🔁 Renewal System
+- Automatic resource/server renewal checks
+- Uses coins to renew server allocations
+
+### 🖥️ Server Management
+- Create new servers
+- View server information
+- Edit server details
+- Delete servers
+
+### 👤 Account System
+- Create and manage user accounts
+- View account details
+
+### 🛠️ Admin/Moderation
+- Blacklist users from using the bot *(requires registration)*
+- Add coins/resources to users
+
+### ⚙️ Node & Egg System
+- Easily add/edit node and egg configurations
+- Set specific limits for each item
+
+---
+
+## 🐛 Bug Reports & Support
+
+- 💬 [Join our Discord server](https://discord.gg/SdyRkZ5HQM) for support and community chat  
+- 🐞 [Post an issue](https://github.com/bluekyeet/BluedBot/issues) if you encounter bugs
+
+---
+
+## 🚀 Installation
+
+> **Requires Python 3.12**
+
+1. Clone the repository and install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Copy the environment file and configure it:
+
+   ```bash
+   cp .example.env .env
+   ```
+
+3. Edit `.env` and update the `nodes/` and `eggs/` folders with your configurations.
+
+---
+
+### ⚠️ Linkvertise Integration Note
+
+If you plan to use Linkvertise, **you must configure a reverse proxy** using NGINX (or another web server) to the port specified in the `.env` file.
+
+---
+
+Made with 💙 by [@bluekyeet](https://github.com/bluekyeet)
