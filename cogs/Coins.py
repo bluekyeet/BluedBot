@@ -127,7 +127,7 @@ class Coins(commands.Cog):
                 if coins >= ram_price:
                     Logger.send_webhook(f"{interaction.user.mention} bought 1024MB RAM")
                     DatabaseHandler.update_coin_count(interaction.user.id, -ram_price)
-                    DatabaseHandler.update_cpu(interaction.user.id, 1024)
+                    DatabaseHandler.update_ram(interaction.user.id, 1024)
                     await interaction.response.send_message(
                         embed=EmbedHandler.success(
                             message=f"You have bought 1024 MB of RAM for {ram_price} coins.\n"
@@ -153,7 +153,7 @@ class Coins(commands.Cog):
                 if coins >= disk_price:
                     Logger.send_webhook(f"{interaction.user.mention} bought 1024 MB DISK.")
                     DatabaseHandler.update_coin_count(interaction.user.id, -disk_price)
-                    DatabaseHandler.update_cpu(interaction.user.id, 1024)
+                    DatabaseHandler.update_disk(interaction.user.id, 1024)
                     await interaction.response.send_message(
                         embed=EmbedHandler.success(
                             message=f"You have bought 1024 MB of DISK for {disk_price} coins.\n"
