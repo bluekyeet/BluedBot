@@ -13,9 +13,9 @@ class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    moderation_command = app_commands.Group(name="moderation", description="Moderation commands")
+    admin_commands = app_commands.Group(name="admin", description="Admin commands")
 
-    @moderation_command.command(name="blacklist", description="The account you want to blacklist from the host.")
+    @admin_commands.command(name="blacklist", description="The account you want to blacklist from the host.")
     async def blacklist(self, interaction: discord.Interaction, user: discord.User):
         if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
@@ -24,7 +24,7 @@ class Moderation(commands.Cog):
                 ), ephemeral=True
             )
             return
-        if interaction.user.get_role(int(os.getenv("DISCORD_SERVER_ADMIN_ROLE_ID"))) is None and interaction.user.get_role(int(os.getenv("DISCORD_SERVER_MODERATOR_ROLE_ID"))) is None:
+        if interaction.user.get_role(int(os.getenv("DISCORD_SERVER_ADMIN_ROLE_ID"))) is None:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."
@@ -38,7 +38,7 @@ class Moderation(commands.Cog):
         )
         DatabaseHandler.update_blacklist_status(user.id, 1)
 
-    @moderation_command.command(name="unblacklist", description="The account you want to unblacklist from the host.")
+    @admin_commands.command(name="unblacklist", description="The account you want to unblacklist from the host.")
     async def unblacklist(self, interaction: discord.Interaction, user: discord.User):
         if DatabaseHandler.get_blacklist_status(interaction.user.id) != 0:
             await interaction.response.send_message(
@@ -47,7 +47,7 @@ class Moderation(commands.Cog):
                 ), ephemeral=True
             )
             return
-        if interaction.user.get_role(int(os.getenv("DISCORD_SERVER_ADMIN_ROLE_ID"))) is None and interaction.user.get_role(int(os.getenv("DISCORD_SERVER_MODERATOR_ROLE_ID"))) is None:
+        if interaction.user.get_role(int(os.getenv("DISCORD_SERVER_ADMIN_ROLE_ID"))) is None:
             await interaction.response.send_message(
                 embed=EmbedHandler.warning(
                     message="You don't have permission to use this command."
@@ -61,7 +61,7 @@ class Moderation(commands.Cog):
         )
         DatabaseHandler.update_blacklist_status(user.id, 0)
 
-    @moderation_command.command(name="addcoins", description="Add an amount of coins to a specific user.")
+    @admin_commands.command(name="addcoins", description="Add an amount of coins to a specific user.")
     @app_commands.describe(user="The Discord user of the person you want to add coins to.",
                            amount="The amount of coins you want to add to an user.")
     async def addcoins(self, interaction: discord.Interaction, user: discord.User, amount: int):
