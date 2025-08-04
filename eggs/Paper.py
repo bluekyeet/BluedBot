@@ -1,8 +1,9 @@
-def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int):
+def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int, node_id: int):
     config = {
       "name": name,
       "user": userid,
       "egg": 4,
+      "node_id": node_id,
       "docker_image": "ghcr.io/parkervcp/yolks:java_21",
       "startup": "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}",
       "environment": {
@@ -22,6 +23,11 @@ def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int):
       },
       "allocation": {
         "default": port
+      },
+      "deploy": {
+        "tags": [],
+        "dedicated_ip": False,
+        "port_range": []
       }
     }
     limits = {

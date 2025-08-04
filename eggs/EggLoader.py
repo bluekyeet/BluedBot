@@ -14,7 +14,7 @@ def load_eggs():
                 mod = importlib.import_module(module_path)
                 if hasattr(mod, "egg") and callable(mod.egg):
                     EGG_MODULES[module_name] = mod.egg
-                    config, _ = mod.egg("placeholder", 0, 512, 1024, 100, 25565)
+                    config, _ = mod.egg("placeholder", 0, 512, 1024, 100, 25565, 0)
                     egg_id = config.get("egg")
                     if egg_id is not None:
                         EGG_IDS[egg_id] = module_name

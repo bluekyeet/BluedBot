@@ -1,8 +1,9 @@
-def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int):
+def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int, node_id: int):
     config = {
       "name": name,
       "user": userid,
       "egg": 16,
+    "node_id": node_id,
       "docker_image": "ghcr.io/parkervcp/yolks:python_3.13",
       "startup": 'if [[ -d .git ]] && [[ "{{AUTO_UPDATE}}" == "1" ]]; then git pull; fi; if [[ ! -z "{{PY_PACKAGES}}" ]]; then pip install -U --prefix .local {{PY_PACKAGES}}; fi; if [[ -f /home/container/${REQUIREMENTS_FILE} ]]; then pip install -U --prefix .local -r ${REQUIREMENTS_FILE}; fi; /usr/local/bin/python /home/container/{{PY_FILE}}',
       "environment": {
@@ -23,6 +24,11 @@ def egg(name: str, userid: int, memory: int, disk: int, cpu: int, port: int):
       },
       "allocation": {
         "default": port
+      },
+      "deploy": {
+        "tags": [],
+        "dedicated_ip": False,
+        "port_range": []
       }
     }
     limits = {

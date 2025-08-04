@@ -306,6 +306,7 @@ class Server(commands.Cog):
                 disk=disk,
                 cpu=cpu,
                 port=port,
+                node_id=location_id,
             )
 
             config, limits = result
