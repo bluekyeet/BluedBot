@@ -29,7 +29,7 @@ class BluedHostBot(commands.Bot):
             help_command=None
         )
         self.session = None
-        self.initial_extensions = ["cogs.Coins", "cogs.Account", "cogs.Help", "cogs.Moderation", "cogs.Server"]
+        self.initial_extensions = ["cogs.Coins", "cogs.Account", "cogs.Help", "cogs.Admin", "cogs.Server"]
 
         if str(os.getenv("LINKVERTISE_SYSTEM")).lower() == "enable":
             self.initial_extensions.append("cogs.Linkvertise")
