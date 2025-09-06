@@ -536,7 +536,7 @@ class Server(commands.Cog):
                     json_data = response.json()
                     server_status = json_data["attributes"]["suspended"]
                     if server_status:
-                        renew_url = f"https://panel.bluedhost.org/api/application/servers/{server_id}/unsuspend"
+                        renew_url = f"{os.getenv('PANEL_URL')}/api/application/servers/{server_id}/unsuspend"
                         requests.post(renew_url, headers=headers)
                 except Exception as e:
                     print(e)
