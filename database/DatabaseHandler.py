@@ -169,6 +169,19 @@ def renew_server(server_id):
         return 400
     return 200
 
+def suspend_server(server_id):
+    try:
+        with get_connection() as conn:
+            renew_time = 0
+            conn.execute(text("UPDATE servers SET server_last_renew_date = :renew_time WHERE server_id = :server_id"), {
+                "renew_time": renew_time,
+                "server_id": server_id
+            })
+            conn.commit()
+    except SQLAlchemyError:
+        return 400
+    return 200
+
 def get_all_servers_info(discord_id):
     try:
         with get_connection() as conn:

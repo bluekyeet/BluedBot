@@ -14,12 +14,14 @@ def checker():
             if last_renew_date is None:
                 continue
             if last_renew_date <= int((datetime.datetime.now(datetime.timezone.utc).timestamp()-(int(os.getenv("SERVER_RENEW_DAYS"))*86400))//1):
-                request = requests.post(f"{os.getenv("PANEL_URL")}/api/application/servers/{serverid}/suspend",
-                                    headers={"Authorization": f"Bearer {os.getenv('PANEL_KEY')}",
-                                            "Accept": "application/json",
-                                            "Content-Type": "application/json"})
-                if request.status_code == 204:
-                    print(f"Server {serverid} suspended.")
+                if last_renew_date == 0:
+                    request = requests.post(f"{os.getenv("PANEL_URL")}/api/application/servers/{serverid}/suspend",
+                                        headers={"Authorization": f"Bearer {os.getenv('PANEL_KEY')}",
+                                                "Accept": "application/json",
+                                                "Content-Type": "application/json"})
+                    if request.status_code == 204:
+                        print(f"Server {serverid} suspended.")
+                    DatabaseHandler.suspend_server(serverid)
 
         time.sleep(180)
 
